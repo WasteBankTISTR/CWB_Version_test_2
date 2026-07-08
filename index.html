@@ -633,7 +633,7 @@
 // ════════════════════════════════════════════════════════════════════════
 
 // 🔧 วาง URL /exec ของคุณตรงนี้ (เส้นเดียวกับที่ใช้ทดสอบใน test.html)
-var API_URL = "https://script.google.com/macros/s/AKfycbwmfhrf1-KXW2RXOrwiJRFswBIAFYjWWvOdJUpz8e3MriQQ8ybw-yAdOgZyfBkYbiPO/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbyQZswOkVwSs7Mb3_u6vWSfIH1COhXfEiOITAd2bkJwVW21NCu5J1yv1Qq8zhPUmVjmjQ/exec";
 
 function apiFetch(action, data) {
   data = data || {};
@@ -1585,6 +1585,34 @@ function createMember(btn) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// [green-card v2] บรรทัดข้อมูลตัวตนสมาชิก — ใช้ร่วมกันทุกกรอบสีเขียว ให้สอดคล้องกันทุกหน้า
+//   โรงเรียน: รหัส xxx · ชั้น/ห้อง · เลขที่ xx  (ไม่แสดงระดับการศึกษา)
+//   ชุมชน/สำนักงาน: <ป้ายรหัส> xxx · เลขสมาชิก xx · โซน/แผนก
+//   ตัดส่วนที่ว่างทิ้งอัตโนมัติ (ไม่โชว์ "เลขที่ -" หรือ "/-") และ escape ค่าให้ในตัวแล้ว
+// ═══════════════════════════════════════════════════════════════════════
+function memberIdentityLine(d) {
+  if (!d) return '';
+  var houseNo = String(d.houseNo == null ? '' : d.houseNo).trim();
+  var classNo = String(d.classNo == null ? '' : d.classNo).trim();
+  var zone = String(d.zone == null ? '' : d.zone).trim();
+  var school = (typeof PROFILE !== 'undefined' && PROFILE.mode === 'school');
+  var parts = [];
+  if (school) {
+    if (houseNo) parts.push('รหัส ' + esc(houseNo));
+    var g = String(d.grade == null ? '' : d.grade).trim();
+    var rm = String(d.room == null ? '' : d.room).trim();
+    var cls = (g && rm) ? (g + '/' + rm) : (g || rm);
+    if (cls) parts.push(esc(cls));
+    if (classNo) parts.push('เลขที่ ' + esc(classNo));
+  } else {
+    if (houseNo) parts.push(PROFILE.idLabel + ' ' + esc(houseNo));
+    if (classNo) parts.push('เลขสมาชิก ' + esc(classNo));
+    if (zone) parts.push(esc(zone));
+  }
+  return parts.join(' · ');
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // BALANCE
 // ═══════════════════════════════════════════════════════════════════════
 function showBalance(memberId) {
@@ -1593,7 +1621,7 @@ function showBalance(memberId) {
     var m = r.data;
     document.getElementById('balanceDisplay').innerHTML =
       '<div class="balance-card"><div class="balance-name">' + esc(m.fullName) + '</div>' +
-      '<div class="balance-info">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + ' | ' + esc(m.zone) + '</div>' +
+      '<div class="balance-info">' + memberIdentityLine(m) + '</div>' +
       '<div class="balance-label" style="margin-top:12px">ยอดเงินคงเหลือ</div>' +
       '<div class="balance-amount">฿' + (m.currentBalance||0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
       '<div style="display:flex;justify-content:space-between;font-size:13px;opacity:0.9"><span>ฝากสะสม ฿' + (m.totalDeposit||0).toLocaleString() + '</span><span>ถอนสะสม ฿' + (m.totalWithdraw||0).toLocaleString() + '</span></div></div>' +
@@ -1613,7 +1641,7 @@ function showHistory(memberId) {
     var s = r.summary;
     var canEdit = !!r.canEdit;
     var html = '<div class="balance-card"><div class="balance-name">' + esc(s?s.fullName:'') + '</div>' +
-      '<div class="balance-info">' + PROFILE.idLabel + ' ' + (s?esc(s.houseNo):'') + ' | ' + (s?esc(s.zone):'') + '</div>' +
+      '<div class="balance-info">' + (s?memberIdentityLine(s):'') + '</div>' +
       '<div class="balance-amount">฿' + (s?s.currentBalance:0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
       '<div style="font-size:13px;opacity:0.9">แต้มคงเหลือ: ' + (s?s.pointsBalance:0).toLocaleString() + '</div></div>';
     html += '<div class="card"><div class="card-title">📋 ประวัติธุรกรรม</div>';
@@ -1747,12 +1775,9 @@ function selectDepositMember(memberId) {
   callServer('getMemberBalance', { memberId: memberId }, function(r) {
     if (!r.success) { showToast(r.message, 'error'); return; }
     APP.currentMember = r.data;
-    var _mnLabel = (PROFILE.enableClassNo ? 'เลขที่' : 'เลขสมาชิก');
-    var _cn = (r.data.classNo !== undefined && r.data.classNo !== null && String(r.data.classNo) !== '') ? String(r.data.classNo) : ((APP._memberNoMap || {})[String(memberId)] || '');
-    var _mn = _cn ? (_mnLabel + ' ' + esc(_cn) + ' | ') : '';
     document.getElementById('depositMemberInfo').innerHTML =
       '<div class="balance-name">' + esc(r.data.fullName) + '</div>' +
-      '<div class="balance-info">' + _mn + esc(r.data.zone) + ' | ยอดปัจจุบัน ฿' + r.data.currentBalance.toLocaleString() + '</div>';
+      '<div class="balance-info">' + memberIdentityLine(r.data) + ' · ยอดปัจจุบัน ฿' + r.data.currentBalance.toLocaleString() + '</div>';
     document.getElementById('depositForm').classList.remove('hidden');
     APP.depositCart = [];
     APP.depFilter = 0;
@@ -1975,7 +2000,7 @@ function selectWithdrawMember(memberId) {
     if (!r.success) { showToast(r.message, 'error'); return; }
     APP.currentMember = r.data;
     document.getElementById('withdrawMemberInfo').innerHTML =
-      '<div class="balance-name">' + esc(r.data.fullName) + '</div><div class="balance-info">' + PROFILE.idLabel + ' ' + esc(r.data.houseNo) + ' | ' + esc(r.data.zone) + '</div>' +
+      '<div class="balance-name">' + esc(r.data.fullName) + '</div><div class="balance-info">' + memberIdentityLine(r.data) + '</div>' +
       '<div class="balance-label" style="margin-top:8px">ยอดเงินคงเหลือ</div><div class="balance-amount">฿' + r.data.currentBalance.toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>';
     document.getElementById('withdrawForm').classList.remove('hidden');
   });
@@ -2010,7 +2035,7 @@ function selectRedeemMember(memberId) {
     APP.currentMember = r.data;
     document.getElementById('redeemMemberInfo').innerHTML =
       '<div class="balance-name">' + esc(r.data.fullName) + '</div>' +
-      '<div class="balance-info">' + PROFILE.idLabel + ' ' + esc(r.data.houseNo) + ' | ' + esc(r.data.zone) + '</div>' +
+      '<div class="balance-info">' + memberIdentityLine(r.data) + '</div>' +
       '<div class="balance-label" style="margin-top:8px">แต้มคงเหลือ</div>' +
       '<div class="points-amount">' + (r.data.pointsBalance||0).toLocaleString() + ' แต้ม</div>';
     document.getElementById('redeemForm').classList.remove('hidden');
