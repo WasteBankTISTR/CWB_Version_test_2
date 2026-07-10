@@ -252,7 +252,7 @@
           </div>
           <div class="form-row">
             <div class="form-group"><label class="form-label">คำนำหน้า</label><select id="regPrefix" class="form-select"><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option><option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option></select></div>
-            <div class="form-group"><label class="form-label"><span class="cfg-groupLabel"></span></label><select id="regZone" class="form-select"></select></div>
+            <div class="form-group"><label class="form-label"><span class="cfg-groupLabel"></span></label><select id="regZone" class="form-select" onchange="onRegZoneChange()"></select></div>
           </div>
           <div class="form-row">
             <div class="form-group"><label class="form-label">ชื่อ</label><input type="text" id="regFirstName" class="form-input" placeholder="ชื่อ"></div>
@@ -527,8 +527,45 @@
       <div class="main">
         <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
         <div class="card">
-          <div class="card-title" style="justify-content:space-between"><span>📊 Dashboard</span><button onclick="refreshDashboard()" class="btn-refresh">🔄</button></div>
+          <div class="card-title" style="justify-content:space-between"><span>📊 Dashboard</span><span style="display:flex;gap:6px;align-items:center"><button onclick="openExportData()" class="btn-refresh" title="ส่งออกข้อมูล" style="width:auto;padding:4px 10px;font-size:14px;font-weight:700;line-height:1">📤 ส่งออก</button><button onclick="refreshDashboard()" class="btn-refresh">🔄</button></span></div>
           <div id="dashboardContent" class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ ส่งออกข้อมูล (ธุรกรรม + Dashboard) ═══════════ -->
+    <div id="exportDataPage" class="page hidden">
+      <div class="main">
+        <button class="back-btn" onclick="showPage('dashboardPage')">← กลับ</button>
+        <div class="card">
+          <div class="card-title">📤 ส่งออกธุรกรรม</div>
+          <div style="font-size:13px;color:var(--text-light);margin-bottom:10px">เลือกประเภท ช่วงวันที่ และขอบเขต แล้วดาวน์โหลด Excel หรือ PDF</div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:13px;font-weight:700;margin-bottom:5px">ประเภทรายการ</div>
+            <label style="margin-right:16px"><input type="checkbox" id="exTypeDep" checked> ฝาก</label>
+            <label style="margin-right:16px"><input type="checkbox" id="exTypeWd" checked> ถอน</label>
+            <label><input type="checkbox" id="exTypeRd" checked> แลก</label>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:12px">
+            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ตั้งแต่วันที่</div><input type="date" id="exFrom" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 10px;font-family:inherit;box-sizing:border-box"></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ถึงวันที่</div><input type="date" id="exTo" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 10px;font-family:inherit;box-sizing:border-box"></div>
+          </div>
+          <div id="exScopeRow" style="display:flex;gap:8px;margin-bottom:14px">
+            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ระดับ</div><select id="exZone" onchange="exOnZone()" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit"></select></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ชั้น/ห้อง</div><select id="exClass" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit"><option value="">ทุกชั้น/ห้อง</option></select></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button onclick="doExportTx('xlsx')" class="btn" style="flex:1;background:#15803d">📊 Excel</button>
+            <button onclick="doExportTx('pdf')" class="btn" style="flex:1;background:#dc2626">📄 PDF</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">📊 ส่งออก Dashboard</div>
+          <div style="font-size:13px;color:var(--text-light);margin-bottom:10px">สรุปภาพรวม · หมวดขยะ · ระดับสูงสุด · แนวโน้มรายเดือน</div>
+          <div style="display:flex;gap:8px">
+            <button onclick="doExportDash('xlsx')" class="btn" style="flex:1;background:#15803d">📊 Excel</button>
+            <button onclick="doExportDash('pdf')" class="btn" style="flex:1;background:#dc2626">📄 PDF</button>
+          </div>
         </div>
       </div>
     </div>
@@ -584,6 +621,18 @@
       </div>
     </div>
 
+    <!-- ═══════════ คำขอยกเลิกรายการ (admin อนุมัติ) ═══════════ -->
+    <div id="voidRequestsPage" class="page hidden">
+      <div class="main">
+        <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between"><span>🗑️ คำขอยกเลิกรายการ</span><button onclick="loadVoidRequests()" class="btn-refresh">🔄</button></div>
+          <div style="font-size:12px;color:var(--text-light);margin-bottom:8px">คำขอจากผู้จัดการให้ยกเลิกรายการเก่า (กว่าวันนี้) — อนุมัติแล้วระบบจะยกเลิกให้อัตโนมัติ พร้อมคืนยอด/แต้ม/สต็อก</div>
+          <div id="voidReqList" class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══════════ บัญชี/ยอดของฉัน (Member + ทุก role) ═══════════ -->
     <div id="myAccountPage" class="page hidden">
       <div class="main">
@@ -633,7 +682,7 @@
 // ════════════════════════════════════════════════════════════════════════
 
 // 🔧 วาง URL /exec ของคุณตรงนี้ (เส้นเดียวกับที่ใช้ทดสอบใน test.html)
-var API_URL = "https://script.google.com/macros/s/AKfycbwmfhrf1-KXW2RXOrwiJRFswBIAFYjWWvOdJUpz8e3MriQQ8ybw-yAdOgZyfBkYbiPO/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycby9U27OEhROuF1Cs-bL-5yGwsozU4ovsgvbuIlzs21Cdx1d2NKDsFWAj7qPdZa1c8aS/exec";
 
 function apiFetch(action, data) {
   data = data || {};
@@ -702,6 +751,8 @@ function applyBootstrap(d) {
       else keep = !!PROFILE[spec];
       if (!keep && e.parentNode) e.parentNode.removeChild(e);
     });
+    // [race-fix] PROFILE พร้อมแล้ว → เติม/ยกระดับแถวตัวกรองค้นหา (เผื่อ loadInitialData รันไปก่อนตอน PROFILE ยังว่าง)
+    try { if (typeof injectSearchFilters === 'function') injectSearchFilters(); } catch (e) {}
   } catch (err) { console.error('applyBootstrap error', err); }
 }
 
@@ -899,17 +950,106 @@ function dsToggleExport() {
   document.getElementById('dsCal').classList.add('hidden');
   document.getElementById('dsExportMenu').classList.toggle('hidden');
 }
+// ═══════ ส่งออกข้อมูล: ธุรกรรม (type+ช่วงวัน+ระดับ/ชั้น) + Dashboard ═══════
+function _dlExport(r) {
+  if (!r || !r.success || !r.data || !r.data.ok) { showToast((r && r.data && r.data.error) || 'ส่งออกไม่สำเร็จ', 'error'); return; }
+  var d = r.data, url;
+  try {
+    var bin = atob(d.b64), bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    url = URL.createObjectURL(new Blob([bytes], { type: d.mime }));   // Blob URL เสถียรกว่า data: บนมือถือ/ไฟล์ใหญ่
+  } catch (e) {
+    url = 'data:' + d.mime + ';base64,' + d.b64;
+  }
+  // พยายามดาวน์โหลดอัตโนมัติ (เบราว์เซอร์ปกติ)
+  try {
+    var a = document.createElement('a');
+    a.href = url; a.download = d.fileName; a.rel = 'noopener';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  } catch (e2) {}
+  // แสดงลิงก์ให้แตะเอง — กันเบราว์เซอร์ในแอป (LINE/Facebook) ที่บล็อกการคลิกดาวน์โหลดอัตโนมัติ
+  _downloadSheet(url, d.fileName);
+}
+
+function _downloadSheet(url, fileName) {
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:99999;display:flex;align-items:flex-end';
+  var sheet = document.createElement('div');
+  sheet.style.cssText = 'background:#fff;width:100%;max-width:640px;margin:0 auto;border-radius:16px 16px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom))';
+  var close = function () { if (ov.parentNode) ov.parentNode.removeChild(ov); };
+  sheet.innerHTML = '<div style="font-weight:700;margin-bottom:4px">ไฟล์พร้อมแล้ว ✅</div>' +
+    '<div style="font-size:12px;color:#888;margin-bottom:12px;word-break:break-all">' + esc(fileName) + '</div>';
+  var link = document.createElement('a');
+  link.href = url; link.download = fileName; link.target = '_blank'; link.rel = 'noopener';
+  link.textContent = '⬇  แตะเพื่อบันทึกไฟล์';
+  link.style.cssText = 'display:block;text-align:center;padding:15px;background:#06c755;color:#fff;border-radius:12px;font-weight:700;text-decoration:none;font-size:16px';
+  link.onclick = function () { setTimeout(close, 500); };
+  sheet.appendChild(link);
+  var hint = document.createElement('div');
+  hint.style.cssText = 'font-size:12px;color:#999;text-align:center;margin-top:10px;line-height:1.5';
+  hint.textContent = 'ถ้ายังบันทึกไม่ได้ ให้เปิดแอปนี้ใน Chrome หรือ Safari — เบราว์เซอร์ในแอป LINE/Facebook มักบล็อกการดาวน์โหลด';
+  sheet.appendChild(hint);
+  var cancel = document.createElement('button');
+  cancel.textContent = 'ปิด';
+  cancel.style.cssText = 'display:block;width:100%;padding:13px;border:none;background:#f2f2f2;border-radius:12px;margin-top:10px;color:#666;font-size:15px;cursor:pointer';
+  cancel.onclick = close;
+  sheet.appendChild(cancel);
+  ov.appendChild(sheet);
+  ov.onclick = function (e) { if (e.target === ov) close(); };
+  document.body.appendChild(ov);
+}
+
+function openExportData() {
+  var t = new Date();
+  var today = t.getFullYear() + '-' + dsPad2(t.getMonth() + 1) + '-' + dsPad2(t.getDate());
+  var f = document.getElementById('exFrom'), to = document.getElementById('exTo');
+  if (f && !f.value) f.value = today;
+  if (to && !to.value) to.value = today;
+  var isSchool = (typeof PROFILE !== 'undefined' && PROFILE.mode === 'school');
+  var scopeRow = document.getElementById('exScopeRow');
+  if (scopeRow) scopeRow.style.display = isSchool ? 'flex' : 'none';
+  var zoneSel = document.getElementById('exZone');
+  if (zoneSel) {
+    var opts = '<option value="">ทุกระดับ</option>';
+    (APP.zones || []).forEach(function (z) { opts += '<option value="' + esc(z.name) + '">' + esc(z.name) + '</option>'; });
+    zoneSel.innerHTML = opts;
+  }
+  var cls = document.getElementById('exClass');
+  if (cls) cls.innerHTML = '<option value="">ทุกชั้น/ห้อง</option>';
+  showPage('exportDataPage');
+}
+function exOnZone() {
+  var zone = document.getElementById('exZone').value;
+  var cls = document.getElementById('exClass');
+  cls.innerHTML = '<option value="">ทุกชั้น/ห้อง</option>';
+  if (!zone) return;
+  callServer('getClassrooms', { zone: zone }, function (r) {
+    if (r && r.success) (r.data || []).forEach(function (c) { cls.innerHTML += '<option value="' + esc(c) + '">' + esc(c) + '</option>'; });
+  });
+}
+function doExportTx(fmt) {
+  var types = [];
+  if (document.getElementById('exTypeDep').checked) types.push('ฝาก');
+  if (document.getElementById('exTypeWd').checked) types.push('ถอน');
+  if (document.getElementById('exTypeRd').checked) types.push('แลก');
+  if (!types.length) { showToast('เลือกประเภทอย่างน้อย 1 อย่าง', 'error'); return; }
+  var from = document.getElementById('exFrom').value, to = document.getElementById('exTo').value;
+  if (!from || !to) { showToast('เลือกช่วงวันที่', 'error'); return; }
+  if (from > to) { showToast('วันที่เริ่มต้องไม่เกินวันที่สิ้นสุด', 'error'); return; }
+  var zone = (document.getElementById('exZone') || {}).value || '';
+  var classLabel = (document.getElementById('exClass') || {}).value || '';
+  showToast('กำลังสร้างไฟล์...', 'success');
+  callServer('exportTransactions', { types: types, from: from, to: to, zone: zone, classLabel: classLabel, format: fmt, reporter: (APP.user && APP.user.displayName) || '' }, _dlExport);
+}
+function doExportDash(fmt) {
+  showToast('กำลังสร้างไฟล์...', 'success');
+  callServer('exportDashboard', { format: fmt, reporter: (APP.user && APP.user.displayName) || '' }, _dlExport);
+}
+
 function dsExport(fmt) {
   document.getElementById('dsExportMenu').classList.add('hidden');
   showToast('กำลังสร้างไฟล์...', 'success');
-  callServer('exportDepositSummary', { date: APP.dsDate, format: fmt, reporter: (APP.user && APP.user.displayName) || '' }, function(r) {
-    if (!r.success || !r.data || !r.data.ok) { showToast('ส่งออกไม่สำเร็จ', 'error'); return; }
-    var a = document.createElement('a');
-    a.href = 'data:' + r.data.mime + ';base64,' + r.data.b64;
-    a.download = r.data.fileName;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    showToast('ดาวน์โหลด ' + r.data.fileName, 'success');
-  });
+  callServer('exportDepositSummary', { date: APP.dsDate, format: fmt, reporter: (APP.user && APP.user.displayName) || '' }, _dlExport);
 }
 
 // [WITHDRAW SUMMARY v1.9.4] ── สรุปถอนเงินรายวัน (มิเรอร์ ds*) ──
@@ -1019,14 +1159,7 @@ function wsToggleExport() {
 function wsExport(fmt) {
   document.getElementById('wsExportMenu').classList.add('hidden');
   showToast('กำลังสร้างไฟล์...', 'success');
-  callServer('exportWithdrawSummary', { date: APP.wsDate, format: fmt, reporter: (APP.user && APP.user.displayName) || '' }, function(r) {
-    if (!r.success || !r.data || !r.data.ok) { showToast('ส่งออกไม่สำเร็จ', 'error'); return; }
-    var a = document.createElement('a');
-    a.href = 'data:' + r.data.mime + ';base64,' + r.data.b64;
-    a.download = r.data.fileName;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    showToast('ดาวน์โหลด ' + r.data.fileName, 'success');
-  });
+  callServer('exportWithdrawSummary', { date: APP.wsDate, format: fmt, reporter: (APP.user && APP.user.displayName) || '' }, _dlExport);
 }
 
 function showPage(pageId) {
@@ -1053,6 +1186,7 @@ function showPage(pageId) {
   if (pageId === 'manageRewardsPage') loadManageRewards();
   if (pageId === 'manageUsersPage') loadUsers();
   if (pageId === 'auditPage') loadAuditLogs();
+  if (pageId === 'voidRequestsPage') loadVoidRequests();
   if (pageId === 'myAccountPage') loadMyAccount();
   if (pageId === 'rolePermPage') loadRolePerms();
   if (pageId === 'redeemPage') loadRewardsForRedeem();
@@ -1346,6 +1480,12 @@ function loadZones() {
   var FO = (typeof FORM_OPTIONS !== 'undefined') ? FORM_OPTIONS : { grades: [], rooms: [] };
   _fillSelect('regGrade', FO.grades, '-- เลือกชั้น --');
   _fillSelect('regRoom',  FO.rooms,  '-- เลือกห้อง --');
+  // [auto-zone] ถ้ามี "ระดับ/กลุ่ม" เดียว → เลือกให้อัตโนมัติ แล้ว cascade ชั้นให้ตรงระดับนั้นทันที
+  //   (โหมดโรงเรียน onRegZoneChange จะกรองชั้นให้ ; โหมดอื่นแค่ตั้งค่า zone ให้ ไม่มีช่องชั้น)
+  if (APP.zones && APP.zones.length === 1) {
+    sel.value = APP.zones[0].name;
+    onRegZoneChange();
+  }
   // [MEMBER_NO] โหมดชุมชน/สำนักงาน: เติมเลขสมาชิกถัดไปให้อัตโนมัติเมื่อเปิดหน้า
   var _mn = document.getElementById('regMemberNo');
   if (_mn && !_mn.value) fetchNextMemberNo(true);
@@ -1427,7 +1567,7 @@ function searchMemberFor(context, force) {
   }
   clearTimeout(_searchTimer);
   _searchTimer = setTimeout(function() {
-    callServer('searchMember', { query: query, zone: sendZone, room: room }, function(r) {
+    callServer('searchMember', { query: query, zone: sendZone, room: room, historyOnly: (context === 'history') }, function(r) {
       if (!r.success) return;
       var list = r.data;
       if (levelClasses) { var aset = {}; levelClasses.forEach(function(c) { aset[c] = true; }); list = list.filter(function(m) { return aset[m.classLabel]; }); }
@@ -1463,28 +1603,34 @@ function initFilterDropdowns() {
 }
 function injectSearchFilters() {
   var schoolMode = (typeof PROFILE !== 'undefined' && PROFILE.mode === 'school');
+  var selStyle = 'flex:0 0 auto;min-width:96px;height:46px;box-sizing:border-box;padding:0 12px;border:2px solid var(--border);border-radius:12px;font-size:15px;background:#fff;font-family:inherit;color:inherit';
   SEARCH_CONTEXTS.forEach(function(ctx) {
     var input = document.getElementById(ctx + 'Search');
-    if (!input || document.getElementById(ctx + 'Filters')) return;
-    var box = input.closest('.search-box') || input;
-    var selStyle = 'flex:0 0 auto;min-width:96px;height:46px;box-sizing:border-box;padding:0 12px;border:2px solid var(--border);border-radius:12px;font-size:15px;background:#fff;font-family:inherit;color:inherit';
-    var row = document.createElement('div');
-    row.id = ctx + 'Filters';
-    row.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px';
-    if (schoolMode) {
-      row.innerHTML =
+    if (!input) return;
+    // สร้างแถวตัวกรองครั้งแรก (ถ้ายังไม่มี) แล้วย้ายช่องค้นหาเข้ามาอยู่แถวเดียวกัน
+    var row = document.getElementById(ctx + 'Filters');
+    if (!row) {
+      var box = input.closest('.search-box') || input;
+      row = document.createElement('div');
+      row.id = ctx + 'Filters';
+      row.style.cssText = 'display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px';
+      if (box && box.parentNode) {
+        box.parentNode.insertBefore(row, box);
+        box.style.flex = '1 1 auto';
+        box.style.minWidth = '150px';
+        box.style.margin = '0';
+        input.style.cssText += ';height:46px;box-sizing:border-box;padding-top:0;padding-bottom:0;border-radius:12px;font-size:15px';
+        row.appendChild(box);
+      }
+    }
+    // [race-fix] โหมดโรงเรียน: ถ้ายังไม่มี dropdown ระดับ/ชั้น ให้เติม (เผื่อ PROFILE เพิ่งพร้อมหลังแถวถูกสร้าง)
+    //   เดิม inject รอบเดียว—ถ้ารอบนั้น PROFILE ยังไม่มา dropdown จะหายถาวร ; ตอนนี้เติมย้อนหลังได้
+    if (schoolMode && row && !document.getElementById(ctx + 'ZoneFilter')) {
+      row.insertAdjacentHTML('afterbegin',
         '<select id="' + ctx + 'ZoneFilter" style="' + selStyle + '" onchange="onZoneFilterChange(\'' + ctx + '\')"></select>' +
-        '<select id="' + ctx + 'RoomFilter" style="' + selStyle + '" onchange="searchMemberFor(\'' + ctx + '\')"></select>';
+        '<select id="' + ctx + 'RoomFilter" style="' + selStyle + '" onchange="searchMemberFor(\'' + ctx + '\')"></select>');
     }
-    if (box && box.parentNode) {
-      box.parentNode.insertBefore(row, box);
-      box.style.flex = '1 1 auto';
-      box.style.minWidth = '150px';
-      box.style.margin = '0';
-      if (input) input.style.cssText += ';height:46px;box-sizing:border-box;padding-top:0;padding-bottom:0;border-radius:12px;font-size:15px';
-      row.appendChild(box);
-    }
-    populateScopeFilters(ctx);
+    populateScopeFilters(ctx);   // เติม/รีเฟรชตัวเลือกด้วยข้อมูลล่าสุดเสมอ (idempotent)
   });
 }
 function populateScopeFilters(ctx) {
@@ -1499,10 +1645,26 @@ function populateScopeFilters(ctx) {
     if (levels.length === 1) zoneSel.value = levels[0].zone;
     fillScopeRooms(ctx);
   } else {
-    var opts = '<option value="">ทุก' + PROFILE.groupLabel + '</option>';
-    (APP.zones || []).forEach(function(z) { opts += '<option value="' + esc(z.name) + '">' + esc(z.name) + '</option>'; });
+    var zones = APP.zones || [];
+    var single = (zones.length === 1);   // [auto-filter] ระดับเดียว → เลือกให้อัตโนมัติ (ไม่ต้องมี "ทุกระดับ")
+    var opts = (single ? '' : '<option value="">ทุก' + PROFILE.groupLabel + '</option>');
+    zones.forEach(function(z) { opts += '<option value="' + esc(z.name) + '">' + esc(z.name) + '</option>'; });
     zoneSel.innerHTML = opts;
-    if (roomSel) roomSel.innerHTML = '<option value="">ทุกห้อง</option>';
+    if (single) {
+      // [safeguard] เลือกระดับให้ "หลัง" ยืนยันว่าระดับนั้นมีสมาชิกจริง (getClassrooms คืนชั้น)
+      //   กัน race + กันกรณีคอลัมน์ ระดับ(ZONE) ของสมาชิกไม่ตรงชื่อในชีต Zones → ตัวกรองตัดทุกคนทิ้ง
+      if (roomSel && roomSel.getAttribute('data-autozone') !== zones[0].name) {
+        roomSel.setAttribute('data-autozone', zones[0].name);
+        _loadRoomsNonScoped(ctx, zones[0].name, true, function(classCount) {
+          if (classCount) zoneSel.value = zones[0].name;   // มีสมาชิก → เลือกระดับ ; ไม่มี → คง "ทุกระดับ"
+        });
+      } else if (roomSel && roomSel.querySelectorAll('option').length > 1) {
+        zoneSel.value = zones[0].name;   // เคยโหลดแล้วพบชั้น → คงการเลือกระดับ
+      }
+    } else if (roomSel) {
+      roomSel.innerHTML = '<option value="">ทุกห้อง</option>';
+      roomSel.removeAttribute('data-autozone');
+    }
   }
 }
 function fillScopeRooms(ctx) {
@@ -1518,6 +1680,19 @@ function fillScopeRooms(ctx) {
     classes.map(function(c) { return '<option value="' + esc(c) + '">' + esc(c) + '</option>'; }).join('');
   if (classes.length === 1) roomSel.value = classes[0];
 }
+// [auto-filter] non-scoped: โหลด "ชั้น" ของระดับที่เลือก ; autoSingle=true → มีชั้นเดียวเลือกให้เลย
+function _loadRoomsNonScoped(ctx, zone, autoSingle, cb) {
+  var rs = document.getElementById(ctx + 'RoomFilter');
+  if (!rs) { if (cb) cb(0); return; }
+  rs.innerHTML = '<option value="">ทุกห้อง</option>';
+  if (!zone) { if (cb) cb(0); return; }   // "ทุกระดับ" → ไม่ผูกชั้น
+  callServer('getClassrooms', { zone: zone }, function(r) {
+    var list = (r && r.success) ? (r.data || []) : [];
+    list.forEach(function(c) { rs.innerHTML += '<option value="' + esc(c) + '">' + esc(c) + '</option>'; });
+    if (autoSingle && list.length === 1) rs.value = list[0];   // ชั้นเดียว → เลือกอัตโนมัติ
+    if (cb) cb(list.length);
+  });
+}
 function onZoneFilterChange(ctx) {
   if (APP.scopeFilters && APP.scopeFilters.scoped) {
     fillScopeRooms(ctx);
@@ -1526,13 +1701,9 @@ function onZoneFilterChange(ctx) {
   }
   var zone = document.getElementById(ctx + 'ZoneFilter').value;
   var rs = document.getElementById(ctx + 'RoomFilter');
-  if (rs) {
-    rs.innerHTML = '<option value="">ทุกห้อง</option>';
-    callServer('getClassrooms', { zone: zone }, function(r) {
-      if (r.success) r.data.forEach(function(c) { rs.innerHTML += '<option value="' + esc(c) + '">' + esc(c) + '</option>'; });
-    });
-  }
-  searchMemberFor(ctx);
+  if (rs) rs.removeAttribute('data-autozone');   // ผู้ใช้เปลี่ยนระดับเอง → เคลียร์ guard ให้โหลดชั้นใหม่ได้
+  // โหลดชั้นของระดับใหม่ (auto เลือกถ้ามีชั้นเดียว) แล้วค่อยค้นหา เพื่อให้ตัวกรองชั้นมีผลด้วย
+  _loadRoomsNonScoped(ctx, zone, true, function() { searchMemberFor(ctx); });
 }
 function clearSearchFilters(ctx) {
   var z = document.getElementById(ctx + 'ZoneFilter'); if (z) z.value = '';
@@ -1613,6 +1784,44 @@ function memberIdentityLine(d) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════
+// [grade-filter v1] กรอง "ชั้น" ให้สอดคล้องกับ "ระดับการศึกษา" ที่เลือก
+//   จับคำในชื่อระดับ → prefix ของชั้น ; ไม่แมตช์ = คืนครบทุกชั้น (fallback ไม่พัง)
+//   มัธยม: มีคำว่า "ต้น"→ม.1-3, "ปลาย"→ม.4-6, แค่ "มัธยม"→ม.ทั้งหมด
+// ═══════════════════════════════════════════════════════════════════════
+function _gradesForZone(zoneName, allGrades) {
+  allGrades = allGrades || [];
+  var z = String(zoneName || '');
+  if (!z) return allGrades.slice();
+  var pick = null;
+  if (z.indexOf('อนุบาล') !== -1 || z.indexOf('ปฐมวัย') !== -1) pick = ['อ.'];
+  else if (z.indexOf('ประถม') !== -1) pick = ['ป.'];
+  else if (z.indexOf('มัธยม') !== -1) {
+    if (z.indexOf('ต้น') !== -1) pick = ['ม.1','ม.2','ม.3'];
+    else if (z.indexOf('ปลาย') !== -1) pick = ['ม.4','ม.5','ม.6'];
+    else pick = ['ม.'];
+  }
+  else if (z.indexOf('ปวช') !== -1) pick = ['ปวช'];
+  else if (z.indexOf('ปวส') !== -1) pick = ['ปวส'];
+  if (!pick) return allGrades.slice();
+  return allGrades.filter(function(g) {
+    var gs = String(g);
+    return pick.some(function(pfx) { return gs.indexOf(pfx) === 0; });
+  });
+}
+
+function onRegZoneChange() {
+  if (typeof PROFILE === 'undefined' || PROFILE.mode !== 'school') return;
+  var zoneSel = document.getElementById('regZone');
+  var gradeSel = document.getElementById('regGrade');
+  if (!zoneSel || !gradeSel) return;
+  var FO = (typeof FORM_OPTIONS !== 'undefined') ? FORM_OPTIONS : { grades: [] };
+  var prev = gradeSel.value;
+  var filtered = _gradesForZone(zoneSel.value, FO.grades || []);
+  _fillSelect('regGrade', filtered, '-- เลือกชั้น --');
+  if (prev && filtered.indexOf(prev) !== -1) gradeSel.value = prev;
+}
+
+// ═══════════════════════════════════════════════════════════════════════
 // BALANCE
 // ═══════════════════════════════════════════════════════════════════════
 function showBalance(memberId) {
@@ -1640,6 +1849,8 @@ function showHistory(memberId) {
     if (!r.success) { showToast(r.message, 'error'); return; }
     var s = r.summary;
     var canEdit = !!r.canEdit;
+    APP._histMemberId = memberId;   // [tx-menu] ใช้ในเมนู ⋯
+    APP._txActions = {};            // สิทธิ์ต่อรายการ ให้ txMenu อ่าน
     var html = '<div class="balance-card"><div class="balance-name">' + esc(s?s.fullName:'') + '</div>' +
       '<div class="balance-info">' + (s?memberIdentityLine(s):'') + '</div>' +
       '<div class="balance-amount">฿' + (s?s.currentBalance:0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
@@ -1670,13 +1881,15 @@ function showHistory(memberId) {
           }
         }
         var tag = edited ? ' <span style="color:#f57c00">• แก้แล้ว</span>' : (isReversal ? ' <span style="color:#999">• ยกเลิก</span>' : '');
-        var btn = (canEdit && t.editable)
-          ? '<button class="btn-refresh" style="margin-left:8px" title="แก้น้ำหนัก" onclick="editWeight(\'' + t.transId + '\',\'' + memberId + '\',' + (t.weight||0) + ')">✏️</button>'
+        var hasAction = canEdit && (t.editable || t.voidable || t.requestable);
+        if (hasAction) APP._txActions[t.transId] = { weight: t.weight || 0, editable: !!t.editable, voidable: !!t.voidable, requestable: !!t.requestable };
+        var menuBtn = hasAction
+          ? '<button class="btn-refresh" style="margin-left:8px" title="จัดการรายการ" onclick="txMenu(\'' + t.transId + '\')">⋯</button>'
           : '';
         html += '<div class="list-item"><div class="list-icon">' + icon + '</div><div class="list-content">' +
           '<div class="list-title">' + t.type + (t.wasteType !== '-' ? ': ' + esc(t.wasteType) : '') + tag + '</div>' +
           '<div class="list-subtitle">' + t.createdAt + qtyInfo + pts + '</div></div>' +
-          '<div class="list-value ' + cls + '">' + sign + '฿' + Math.abs(amt).toLocaleString() + '</div>' + btn + '</div>';
+          '<div class="list-value ' + cls + '">' + sign + '฿' + Math.abs(amt).toLocaleString() + '</div>' + menuBtn + '</div>';
       });
     }
     html += '</div>';
@@ -1685,11 +1898,72 @@ function showHistory(memberId) {
   });
 }
 
+// [tx-menu] เมนูจัดการรายการต่อแถว (รวมปุ่ม แก้/ยกเลิก เป็น ⋯ เดียว) — action sheet ล่างจอ
+function txMenu(transId) {
+  var a = (APP._txActions || {})[transId];
+  var memberId = APP._histMemberId;
+  if (!a) return;
+  var items = [];
+  if (a.editable)    items.push({ label: '✏️  แก้น้ำหนัก/จำนวน', fn: function(){ editWeight(transId, memberId, a.weight); } });
+  if (a.voidable)    items.push({ label: '🗑  ยกเลิกรายการ', danger: true, fn: function(){ cancelTx(transId, memberId, true); } });
+  if (a.requestable) items.push({ label: '📩  ขอยกเลิก (ส่งแอดมิน)', danger: true, fn: function(){ cancelTx(transId, memberId, false); } });
+  if (!items.length) return;
+
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:99999;display:flex;align-items:flex-end';
+  var sheet = document.createElement('div');
+  sheet.style.cssText = 'background:#fff;width:100%;max-width:640px;margin:0 auto;border-radius:16px 16px 0 0;padding:8px 8px calc(8px + env(safe-area-inset-bottom))';
+  var close = function(){ if (ov.parentNode) ov.parentNode.removeChild(ov); };
+  var head = document.createElement('div');
+  head.textContent = 'จัดการรายการ';
+  head.style.cssText = 'font-size:12px;color:#999;padding:8px 12px 4px';
+  sheet.appendChild(head);
+  items.forEach(function(it){
+    var b = document.createElement('button');
+    b.textContent = it.label;
+    b.style.cssText = 'display:block;width:100%;text-align:left;padding:15px 16px;border:none;background:none;font-size:15px;border-radius:10px;cursor:pointer;' + (it.danger ? 'color:#f44336' : 'color:#222');
+    b.onclick = function(){ close(); it.fn(); };
+    sheet.appendChild(b);
+  });
+  var cancel = document.createElement('button');
+  cancel.textContent = 'ปิด';
+  cancel.style.cssText = 'display:block;width:100%;padding:15px 16px;border:none;background:#f2f2f2;font-size:15px;border-radius:10px;margin-top:6px;color:#666;cursor:pointer';
+  cancel.onclick = close;
+  sheet.appendChild(cancel);
+  ov.appendChild(sheet);
+  ov.onclick = function(e){ if (e.target === ov) close(); };
+  document.body.appendChild(ov);
+}
+
+// [tx_void] ยกเลิกรายการ ฝาก/ถอน (ปุ่มเดียว) — direct=true (วันนี้) ยกเลิกเลย ; direct=false (เก่ากว่าวันนี้) ส่งคำขอไปแอดมิน
+//   สิทธิ์ tx_edit (manager/admin หรือ role ที่ถูกติ๊กให้) ; server ตรวจซ้ำทุกครั้ง
+function cancelTx(transId, memberId, direct) {
+  if (direct) {
+    if (!confirm('ยืนยันยกเลิกรายการนี้?\n\nระบบจะคืนยอดเงิน/แต้ม/สต็อก/สินค้าที่รายการนี้ทำไว้ และบันทึกร่องรอยไว้ในประวัติ\nดำเนินการแล้วย้อนกลับไม่ได้')) return;
+    callServer('voidTransaction', { transId: transId }, function(r) {
+      if (!r || !r.success) { showToast((r && r.message) || 'ยกเลิกไม่สำเร็จ', 'error'); return; }
+      showToast(r.message || 'ยกเลิกรายการแล้ว', 'success');
+      showHistory(memberId);
+    });
+  } else {
+    var reason = prompt('รายการนี้เก่ากว่าวันนี้ — ต้องส่งคำขอให้แอดมินอนุมัติ\n\nระบุเหตุผลการขอยกเลิก:');
+    if (reason === null) return;
+    reason = (reason || '').trim();
+    if (!reason) { showToast('กรุณาระบุเหตุผล', 'error'); return; }
+    callServer('requestVoid', { transId: transId, reason: reason }, function(r) {
+      if (!r || !r.success) { showToast((r && r.message) || 'ส่งคำขอไม่สำเร็จ', 'error'); return; }
+      showToast(r.message || 'ส่งคำขอไปแอดมินแล้ว', 'success');
+      showHistory(memberId);
+    });
+  }
+}
+
 // [tx_edit] แก้น้ำหนักรายการฝาก (เฉพาะผู้มีสิทธิ์ tx_edit — server ตรวจซ้ำอีกชั้น)
 function editWeight(transId, memberId, oldWeight) {
   var m = (APP._txMeta || {})[transId] || {};
   var unitBased = (m.unit && m.unit !== 'กก.' && m.uw > 0);
   var newWeight;
+  var newQty = null;   // [UNIT FIX] จำนวนหน่วยที่ผู้ใช้กรอก → ส่งให้ backend ใช้ตรง ๆ กันเศษเพี้ยนจากการหารน้ำหนัก
   if (unitBased) {
     var oldQty = m.price ? Math.round(Math.abs(m.amount) / m.price * 100) / 100 : Math.round(oldWeight / m.uw * 100) / 100;
     var vq = prompt('แก้จำนวนรายการนี้\nจำนวนเดิม: ' + oldQty + ' ' + m.unit + '\n\nใส่จำนวนใหม่ (' + m.unit + '):', oldQty);
@@ -1697,6 +1971,7 @@ function editWeight(transId, memberId, oldWeight) {
     var q = parseFloat(vq);
     if (!q || q <= 0) { showToast('จำนวนไม่ถูกต้อง', 'error'); return; }
     newWeight = Math.round(q * m.uw * 100) / 100;
+    newQty = q;   // [UNIT FIX]
     if (Math.abs(newWeight - parseFloat(oldWeight)) < 0.001) { showToast('จำนวนเท่ากับของเดิม', 'error'); return; }
     if (!confirm('ยืนยันแก้ ' + oldQty + ' → ' + q + ' ' + m.unit + ' (' + newWeight + ' กก.)?\nระบบจะยกเลิกรายการเดิมและออกรายการใหม่ให้')) return;
   } else {
@@ -1707,7 +1982,9 @@ function editWeight(transId, memberId, oldWeight) {
     if (newWeight === parseFloat(oldWeight)) { showToast('น้ำหนักเท่ากับของเดิม', 'error'); return; }
     if (!confirm('ยืนยันแก้น้ำหนัก ' + oldWeight + ' → ' + newWeight + ' กก.?\nระบบจะยกเลิกรายการเดิมและออกรายการใหม่ให้')) return;
   }
-  callServer('correctDepositWeight', { transId: transId, newWeight: newWeight }, function(r) {
+  var _corrPayload = { transId: transId, newWeight: newWeight };
+  if (newQty != null) _corrPayload.newQty = newQty;   // [UNIT FIX] ส่งจำนวนหน่วยไปด้วยเมื่อเป็นหน่วยลัง/ชิ้น
+  callServer('correctDepositWeight', _corrPayload, function(r) {
     if (!r || !r.success) { showToast((r && r.message) || 'แก้ไม่สำเร็จ', 'error'); return; }
     showToast(r.message || 'แก้สำเร็จ', 'success');
     showHistory(memberId);
@@ -2973,6 +3250,56 @@ function createUser(btn) {
 // AUDIT LOGS (Admin)
 // ═══════════════════════════════════════════════════════════════════════
 var _auditData = [];
+function loadVoidRequests() {
+  var box = document.getElementById('voidReqList');
+  if (box) box.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  callServer('listVoidRequests', {}, function(r) {
+    if (!r || !r.success) { if (box) box.innerHTML = '<div style="color:var(--danger);padding:16px">' + esc((r && r.message) || 'โหลดไม่สำเร็จ') + '</div>'; return; }
+    renderVoidRequests(r.data || []);
+  });
+}
+
+function renderVoidRequests(list) {
+  var box = document.getElementById('voidReqList');
+  if (!box) return;
+  if (!list.length) { box.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-light)">ไม่มีคำขอ</div>'; return; }
+  var h = '';
+  list.forEach(function(q) {
+    var pending = q.status === 'รออนุมัติ';
+    var stColor = pending ? '#ef6c00' : (q.status === 'อนุมัติแล้ว' ? 'var(--success)' : 'var(--danger)');
+    h += '<div class="list-item" style="flex-direction:column;align-items:stretch;gap:6px;padding:12px 0;border-bottom:1px solid #eee">';
+    h += '<div style="display:flex;justify-content:space-between;align-items:center">' +
+         '<span style="font-weight:700">' + esc(q.type) + ' · ฿' + (q.amount||0).toLocaleString() + '</span>' +
+         '<span style="font-size:12px;font-weight:700;color:' + stColor + '">' + esc(q.status) + '</span></div>';
+    h += '<div style="font-size:12px;color:var(--text-light)">สมาชิก: ' + esc(q.fullName || q.memberId) + ' · รายการวันที่ ' + esc(q.transDate || '-') + '</div>';
+    h += '<div style="font-size:12px">เหตุผล: ' + esc(q.reason || '-') + '</div>';
+    h += '<div style="font-size:11px;color:var(--text-light)">ขอโดย ' + esc(q.requestedBy || '-') + ' · ' + esc(q.requestedAt || '') + '</div>';
+    if (pending) {
+      h += '<div style="display:flex;gap:8px;margin-top:4px">' +
+           '<button class="btn" style="flex:1;background:var(--success);padding:8px" onclick="resolveVoidReq(\'' + esc(q.reqId) + '\',true)">✅ อนุมัติ & ยกเลิก</button>' +
+           '<button class="btn" style="flex:1;background:var(--danger);padding:8px" onclick="resolveVoidReq(\'' + esc(q.reqId) + '\',false)">✕ ปฏิเสธ</button></div>';
+    } else if (q.resolvedBy) {
+      h += '<div style="font-size:11px;color:var(--text-light)">โดย ' + esc(q.resolvedBy) + ' · ' + esc(q.resolvedAt || '') + (q.resolveNote ? ' · ' + esc(q.resolveNote) : '') + '</div>';
+    }
+    h += '</div>';
+  });
+  box.innerHTML = h;
+}
+
+function resolveVoidReq(reqId, approve) {
+  var msg = approve
+    ? 'อนุมัติคำขอนี้?\nระบบจะยกเลิกรายการจริง และคืนยอด/แต้ม/สต็อกให้ (ย้อนกลับไม่ได้)'
+    : 'ปฏิเสธคำขอนี้?';
+  if (!confirm(msg)) return;
+  var note = '';
+  if (!approve) { note = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ):') || ''; }
+  callServer('resolveVoidRequest', { reqId: reqId, approve: approve, note: note }, function(r) {
+    if (!r || !r.success) { showToast((r && r.message) || 'ดำเนินการไม่สำเร็จ', 'error'); return; }
+    showToast(r.message || 'สำเร็จ', 'success');
+    loadVoidRequests();
+  });
+}
+
 function loadAuditLogs() {
   callServer('getAuditLogs', { limit: 100 }, function(r) {
     if (!r.success) { document.getElementById('auditLogList').innerHTML = '<div style="color:var(--danger);padding:16px">' + esc(r.message) + '</div>'; return; }
@@ -3016,7 +3343,7 @@ function filterAuditLogs() {
 // ═══════════════════════════════════════════════════════════════════════
 // REFRESH BUTTONS
 // ═══════════════════════════════════════════════════════════════════════
-function refreshRegister() { callServer('clearCacheKeys',{keys:['zones_data']},function(){loadZones();showToast('โหลดใหม่แล้ว','success');}); }
+function refreshRegister() { callServer('clearCacheKeys',{keys:['zones_data']},function(){callServer('getZones',{},function(r){if(r&&r.success&&r.data)APP.zones=r.data;loadZones();showToast('โหลดใหม่แล้ว','success');});}); }
 function refreshBalance() { callServer('clearCacheKeys',{keys:['balance_map','members_data']},function(){document.getElementById('balanceDisplay').classList.add('hidden');showToast('โหลดใหม่แล้ว','success');}); }
 function refreshHistory() { callServer('clearCacheKeys',{keys:['balance_map','members_data']},function(){document.getElementById('historyDisplay').classList.add('hidden');showToast('โหลดใหม่แล้ว','success');}); }
 function refreshDeposit() {
