@@ -273,12 +273,12 @@
             <div class="form-group"><label class="form-label">นามสกุล</label><input type="text" id="regLastName" class="form-input" placeholder="นามสกุล"></div>
           </div>
           <div class="cond" data-if="enableNickname"><div class="form-group"><label class="form-label">ชื่อเล่น</label><input type="text" id="regNickname" class="form-input" placeholder="ชื่อเล่น"></div></div>
-          <div class="cond" data-if="enableClassNo"><div class="form-group"><label class="form-label">เลขที่</label><input type="text" id="regClassNo" class="form-input" placeholder="เลขที่"></div></div>
+          <div class="cond" data-if="enableClassNo"><div class="form-group"><label class="form-label">เลขที่</label><div style="position:relative"><input type="text" inputmode="numeric" id="regClassNo" class="form-input" placeholder="เลขที่" style="padding-right:48px"><button type="button" class="kp-btn" onclick="openSearchKeypad('regClassNo')" aria-label="แป้นตัวเลข">🔢</button></div></div></div>
           <div class="cond" data-if="mode=school"><div class="form-row"><div class="form-group"><label class="form-label">ชั้น</label><select id="regGrade" class="form-select"></select></div><div class="form-group"><label class="form-label">ห้อง</label><select id="regRoom" class="form-select"></select></div></div></div>
-          <div><div class="form-row"><div class="form-group"><label class="form-label">รหัสไปรษณีย์</label><input type="text" id="regPostcode" class="form-input" maxlength="5" placeholder="10240" inputmode="numeric" oninput="onRegPostcode()"></div><div class="form-group"><label class="form-label">จังหวัด</label><input type="text" id="regProvince" class="form-input" placeholder="จังหวัด"></div></div><div class="form-row"><div class="form-group"><label class="form-label">อำเภอ</label><input type="text" id="regAmphoe" class="form-input" placeholder="อำเภอ" list="dlAmphoe" oninput="onRegAmphoe()"></div><div class="form-group"><label class="form-label">ตำบล</label><input type="text" id="regTambon" class="form-input" placeholder="ตำบล" list="dlTambon"></div></div><datalist id="dlAmphoe"></datalist><datalist id="dlTambon"></datalist></div>
+          <div><div class="form-row"><div class="form-group"><label class="form-label">รหัสไปรษณีย์</label><div style="position:relative"><input type="text" id="regPostcode" class="form-input" maxlength="5" placeholder="10240" inputmode="numeric" oninput="onRegPostcode()" style="padding-right:48px"><button type="button" class="kp-btn" onclick="openSearchKeypad('regPostcode')" aria-label="แป้นตัวเลข">🔢</button></div></div><div class="form-group"><label class="form-label">จังหวัด</label><input type="text" id="regProvince" class="form-input" placeholder="จังหวัด"></div></div><div class="form-row"><div class="form-group"><label class="form-label">อำเภอ</label><input type="text" id="regAmphoe" class="form-input" placeholder="อำเภอ" list="dlAmphoe" oninput="onRegAmphoe()"></div><div class="form-group"><label class="form-label">ตำบล</label><input type="text" id="regTambon" class="form-input" placeholder="ตำบล" list="dlTambon"></div></div><datalist id="dlAmphoe"></datalist><datalist id="dlTambon"></datalist></div>
           <div class="form-group"><label class="form-label">เบอร์โทร</label><input type="tel" id="regPhone" class="form-input" placeholder="0812345678"></div>
           <div class="form-row">
-            <div class="cond" data-if="enableIdCard"><div class="form-group"><label class="form-label">บัตร ปชช. 4 หลักท้าย</label><input type="text" id="regIdCard" class="form-input" maxlength="4" placeholder="1234"></div></div>
+            <div class="cond" data-if="enableIdCard"><div class="form-group"><label class="form-label">บัตร ปชช. 4 หลักท้าย</label><div style="position:relative"><input type="text" inputmode="numeric" id="regIdCard" class="form-input" maxlength="4" placeholder="1234" style="padding-right:48px"><button type="button" class="kp-btn" onclick="openSearchKeypad('regIdCard')" aria-label="แป้นตัวเลข">🔢</button></div></div></div>
             <div class="form-group"><label class="form-label">ที่อยู่ (ถ้ามี)</label><input type="text" id="regAddress" class="form-input" placeholder="ที่อยู่"></div>
           </div>
           <button class="btn btn-primary" onclick="createMember(this)">✓ ลงทะเบียน<span class="cfg-subjectWord"></span></button>
@@ -1794,7 +1794,7 @@ function _skpPress(k) {
   if (k === 'del') _skpTarget.value = _skpTarget.value.slice(0, -1);
   else if (k === 'clr') _skpTarget.value = '';
   else if (k === '.') { if (_skpTarget.value.indexOf('.') === -1) _skpTarget.value = (_skpTarget.value === '' ? '0.' : _skpTarget.value + '.'); }
-  else _skpTarget.value += k;
+  else { if (!(_skpTarget.maxLength && _skpTarget.maxLength > 0 && _skpTarget.value.length >= _skpTarget.maxLength)) _skpTarget.value += k; }
   try { _skpTarget.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) { if (typeof _skpTarget.oninput === 'function') _skpTarget.oninput(); }
   _skpSyncLabel();
 }
@@ -2712,9 +2712,9 @@ function loadSellData() {
       document.getElementById('sellForm').innerHTML =
         '<div style="font-weight:700;margin-bottom:8px">เพิ่มรายการขาย</div>' +
         '<div class="form-group"><label class="form-label">ประเภทขยะ · (คงเหลือในสต๊อก)</label><select id="sellWaste" class="form-select" onchange="onSellTypeChange()"><option value="">-- เลือก --</option></select></div>' +
-        '<div class="form-group hidden" id="sellQtyWrap"><label class="form-label" id="sellQtyLabel">จำนวน</label><input type="number" id="sellQty" class="form-input" step="0.01" min="0.01" oninput="onSellQty()"></div>' +
-        '<div class="form-row"><div class="form-group"><label class="form-label">น้ำหนัก (กก.)</label><input type="number" id="sellWeight" class="form-input" step="0.01" min="0.01" oninput="sellValidate()"></div>' +
-        '<div class="form-group"><label class="form-label" id="sellPriceLabel">ราคาขาย/กก. (พิมพ์เอง)</label><input type="number" id="sellPrice" class="form-input" step="0.01" min="0" oninput="sellValidate()"></div></div>' +
+        '<div class="form-group hidden" id="sellQtyWrap"><label class="form-label" id="sellQtyLabel">จำนวน</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellQty" class="form-input" oninput="onSellQty()" style="padding-right:44px"><button type="button" class="kp-btn" onclick="openSearchKeypad(\'sellQty\',{decimal:true})" aria-label="แป้นตัวเลข">🔢</button></div></div>' +
+        '<div class="form-row"><div class="form-group"><label class="form-label">น้ำหนัก (กก.)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellWeight" class="form-input" oninput="sellValidate()" style="padding-right:44px"><button type="button" class="kp-btn" onclick="openSearchKeypad(\'sellWeight\',{decimal:true})" aria-label="แป้นตัวเลข">🔢</button></div></div>' +
+        '<div class="form-group"><label class="form-label" id="sellPriceLabel">ราคาขาย/กก. (พิมพ์เอง)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellPrice" class="form-input" oninput="sellValidate()" style="padding-right:44px"><button type="button" class="kp-btn" onclick="openSearchKeypad(\'sellPrice\',{decimal:true})" aria-label="แป้นตัวเลข">🔢</button></div></div></div>' +
         '<div id="sellWarn" class="hidden" style="font-size:13px;color:#a32d2d;background:#fdecec;border-radius:9px;padding:8px 10px;margin-bottom:10px"></div>' +
         '<button id="sellAddBtn" class="btn btn-primary" onclick="sellAddItem()" style="margin-bottom:14px">➕ เพิ่มรายการ</button>' +
         '<div style="border-top:1px solid #eee;padding-top:12px"><div style="font-weight:700;margin-bottom:6px">รายการขาย <span id="sellCartCount" style="color:#888;font-weight:400;font-size:13px"></span></div>' +
@@ -3093,8 +3093,8 @@ function showAddRewardForm() {
   document.getElementById('addRewardForm').innerHTML =
     '<div class="card"><div class="card-title">🎁 เพิ่มรางวัลใหม่</div>' +
     '<div class="form-group"><label class="form-label">ชื่อรางวัล</label><input type="text" id="newRewardName" class="form-input" placeholder="เช่น ถุงขยะ 1 แพ็ค"></div>' +
-    '<div class="form-row"><div class="form-group"><label class="form-label">แต้มที่ใช้แลก</label><input type="number" id="newRewardCost" class="form-input" min="1"></div>' +
-    '<div class="form-group"><label class="form-label">จำนวนในสต็อก</label><input type="number" id="newRewardStock" class="form-input" min="0"></div></div>' +
+    '<div class="form-row"><div class="form-group"><label class="form-label">แต้มที่ใช้แลก</label><div style="position:relative"><input type="number" id="newRewardCost" class="form-input" min="1" style="padding-right:44px"><button type="button" class="kp-btn" onclick="openSearchKeypad(\'newRewardCost\')" aria-label="แป้นตัวเลข">🔢</button></div></div>' +
+    '<div class="form-group"><label class="form-label">จำนวนในสต็อก</label><div style="position:relative"><input type="number" id="newRewardStock" class="form-input" min="0" style="padding-right:44px"><button type="button" class="kp-btn" onclick="openSearchKeypad(\'newRewardStock\')" aria-label="แป้นตัวเลข">🔢</button></div></div></div>' +
     '<div class="form-group"><label class="form-label">URL รูปภาพ (ถ้ามี)</label><input type="text" id="newRewardImage" class="form-input" placeholder="https://drive.google.com/..."></div>' +
     '<div class="form-group"><label class="form-label">หมวด</label><input type="text" id="newRewardCategory" class="form-input" placeholder="เช่น ของใช้, อาหาร"></div>' +
     '<button class="btn btn-primary" onclick="addReward(this)">✓ เพิ่มรางวัล</button></div>';
