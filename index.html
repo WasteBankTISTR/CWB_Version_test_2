@@ -57,6 +57,20 @@
     .search-box input{width:100%;padding:14px 16px 14px 44px;border:2px solid var(--border);border-radius:12px;font-size:15px}
     .search-box input:focus{outline:none;border-color:var(--primary)}
     .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:20px;color:#999}
+    .kp-btn{position:absolute;right:8px;top:50%;transform:translateY(-50%);border:none;background:#eef0f2;border-radius:9px;width:34px;height:34px;font-size:17px;cursor:pointer;color:#555;display:flex;align-items:center;justify-content:center;padding:0}
+    .kp-btn:active{background:#e0e2e4}
+    .skp-scrim{position:fixed;inset:0;background:rgba(0,0,0,.12);z-index:9998;display:none}
+    .skp-scrim.on{display:block}
+    .skp{position:fixed;left:0;right:0;bottom:0;z-index:9999;max-width:640px;margin:0 auto;background:#fff;border-radius:16px 16px 0 0;box-shadow:0 -6px 24px rgba(0,0,0,.18);padding:8px 10px calc(10px + env(safe-area-inset-bottom));transform:translateY(115%);transition:transform .22s ease}
+    .skp.on{transform:translateY(0)}
+    .skp-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 8px}
+    .skp-q{font-size:14px;font-weight:600;color:#333;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:80%}
+    .skp-x{border:none;background:#f2f2f2;color:#666;width:30px;height:30px;border-radius:8px;font-size:15px;cursor:pointer}
+    .skp-keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+    .skp-key{padding:15px 0;font-size:20px;font-weight:600;text-align:center;border:1px solid #e6e6e6;border-radius:12px;background:#fafafa;color:#222;cursor:pointer;user-select:none}
+    .skp-key.sm{font-size:15px;font-weight:500;color:#c62828}
+    .skp-key:active{background:#eee}
+    .skp-key.wide{margin-top:8px;padding:14px 0;background:#06c755;color:#fff;border:none;font-size:16px;border-radius:12px;text-align:center;cursor:pointer}
     .search-result{padding:14px;background:white;border-bottom:1px solid var(--border);cursor:pointer}
     .search-result:hover{background:#f8f9fa}
     .list-item{display:flex;align-items:center;padding:14px 0;border-bottom:1px solid var(--border)}
@@ -304,7 +318,7 @@
         <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
         <div class="card">
           <div class="card-title" style="justify-content:space-between"><span>💰 ฝากขยะ</span><span style="display:flex;gap:6px;align-items:center"><button onclick="openDepositSummary()" class="btn-refresh" style="width:auto;padding:4px 10px;font-size:16px;font-weight:700;line-height:1">📋 สรุปฝากขยะ</button><button onclick="refreshDeposit()" class="btn-refresh">🔄</button></span></div>
-          <div class="search-box"><span class="search-icon">🔎</span><input type="text" id="depositSearch" placeholder="" data-ph-tpl="ค้นหา {idLabel}/ชื่อ..." oninput="searchMemberFor('deposit')"></div>
+          <div class="search-box"><span class="search-icon">🔎</span><input type="text" id="depositSearch" placeholder="" data-ph-tpl="ค้นหา {idLabel}/ชื่อ..." oninput="searchMemberFor('deposit')" style="padding-right:46px"><button type="button" class="kp-btn" onclick="openSearchKeypad('depositSearch')" aria-label="แป้นตัวเลข">🔢</button></div>
           <div id="depositSearchResults"></div>
         </div>
         <div id="depositForm" class="hidden">
@@ -312,7 +326,7 @@
           <div class="card">
             <div class="card-title">📦 เลือกประเภทขยะ</div>
             <div class="dep-tools">
-              <div class="search-box"><span class="search-icon">🔎</span><input type="text" id="depCatalogSearch" placeholder="ค้นหาประเภทขยะ / รหัส PD..." oninput="renderDepCatalog()"></div>
+              <div class="search-box"><span class="search-icon">🔎</span><input type="text" id="depCatalogSearch" placeholder="ค้นหาประเภทขยะ / รหัส PD..." oninput="renderDepCatalog()" style="padding-right:46px"><button type="button" class="kp-btn" onclick="openSearchKeypad('depCatalogSearch')" aria-label="แป้นตัวเลข">🔢</button></div>
               <div class="dep-chips" id="depChips"></div>
             </div>
             <div class="dep-grid" id="depGrid"></div>
@@ -393,7 +407,7 @@
         <div id="withdrawForm" class="hidden">
           <div class="balance-card" id="withdrawMemberInfo"></div>
           <div class="card">
-            <div class="form-group"><label class="form-label">จำนวนเงินที่ต้องการถอน (บาท)</label><input type="number" id="withdrawAmount" class="form-input" placeholder="0.00" step="0.01" min="1"></div>
+            <div class="form-group"><label class="form-label">จำนวนเงินที่ต้องการถอน (บาท)</label><div style="position:relative"><input type="text" inputmode="decimal" id="withdrawAmount" class="form-input" placeholder="0.00" style="padding-right:48px"><button type="button" class="kp-btn" onclick="openSearchKeypad('withdrawAmount',{decimal:true})" aria-label="แป้นตัวเลข">🔢</button></div></div>
             <div class="form-group"><label class="form-label">หมายเหตุ</label><input type="text" id="withdrawNote" class="form-input" placeholder="หมายเหตุ (ถ้ามี)"></div>
             <button class="btn btn-danger" onclick="processWithdraw(this)">💸 ถอนเงิน</button>
           </div>
@@ -1731,9 +1745,11 @@ function searchMemberFor(context, force) {
         var cls = m.classLabel ? (' · ' + esc(m.classLabel)) : '';
         var no = (m.classNo !== undefined && m.classNo !== null && String(m.classNo) !== '') ? ((PROFILE.enableClassNo ? ' เลขที่ ' : ' เลขสมาชิก ') + esc(m.classNo)) : '';
         (APP._memberNoMap = APP._memberNoMap || {})[String(m.memberId)] = (m.classNo != null ? String(m.classNo) : '');   // [MEMBER_NO] เก็บไว้โชว์ในกรอบ (ไม่ต้องรอ backend ใหม่)
+        // [school] โหมดโรงเรียน: ตัดระดับ (เช่น อนุบาล) ออกจากบรรทัดรายละเอียด — ซ้ำกับ "ชั้น" ที่โชว์บนหัวข้ออยู่แล้ว
+        var zoneSeg = (typeof PROFILE !== 'undefined' && PROFILE.mode === 'school') ? '' : (' | ' + esc(m.zone));
         return '<div class="search-result" onclick="selectMemberFor(\'' + context + '\',\'' + esc(m.memberId) + '\')">' +
           '<div class="list-title">' + esc(m.fullName) + cls + no + '</div>' +
-          '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + ' | ' + esc(m.zone) + ' | ฿' + (m.balance||0).toLocaleString() + ' | ' + (m.points||0).toLocaleString() + ' แต้ม</div></div>';
+          '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + zoneSeg + ' | ฿' + (m.balance||0).toLocaleString() + ' | ' + (m.points||0).toLocaleString() + ' แต้ม</div></div>';
       }).join('');
       document.getElementById(context + 'SearchResults').innerHTML = html || (force ? '' : '<div style="padding:14px;color:#999">ไม่พบ' + PROFILE.subjectWord + '</div>');
     });
@@ -1741,6 +1757,52 @@ function searchMemberFor(context, force) {
 }
 
 function scopedAutoLoad(context) { searchMemberFor(context, true); }   // [scope v1.6] เปิดหน้ามาโหลดรายชื่อกลุ่มของ operator ทันที
+
+// ═══ [in-app numeric keypad] แป้นตัวเลขในแอปสำหรับช่องค้นหา (กดไอคอน 🔢 เพื่อพิมพ์รหัส/เลขเร็ว — คีย์บอร์ดมือถือไม่ต้องเด้ง) ═══
+var _skpTarget = null;
+function openSearchKeypad(inputId, opts) {
+  var el = document.getElementById(inputId);
+  if (!el) return;
+  opts = opts || {};
+  _skpTarget = el;
+  var scrim = document.getElementById('skpScrim');
+  var pad = document.getElementById('skpPad');
+  if (!pad) {
+    scrim = document.createElement('div'); scrim.id = 'skpScrim'; scrim.className = 'skp-scrim';
+    scrim.onclick = closeSearchKeypad;
+    pad = document.createElement('div'); pad.id = 'skpPad'; pad.className = 'skp';
+    document.body.appendChild(scrim); document.body.appendChild(pad);
+  }
+  // [decimal] ช่องเงิน/น้ำหนัก → มีปุ่มจุด ; ช่องค้นหา → ปุ่ม ล้าง แทน (สร้างคีย์ใหม่ทุกครั้งที่เปิด)
+  var ks = opts.decimal ? ['1','2','3','4','5','6','7','8','9','.','0','del'] : ['1','2','3','4','5','6','7','8','9','del','0','clr'];
+  var keys = ks.map(function(k) {
+    var lbl = (k === 'del') ? '⌫' : (k === 'clr') ? 'ล้าง' : k;
+    return '<div class="skp-key' + (k === 'clr' ? ' sm' : '') + '" onclick="_skpPress(\'' + k + '\')">' + lbl + '</div>';
+  }).join('');
+  var head = '<div class="skp-head"><span class="skp-q" id="skpQ"></span><button type="button" class="skp-x" onclick="closeSearchKeypad()" aria-label="ปิด">✕</button></div>';
+  pad.innerHTML = head + '<div class="skp-keys">' + keys + '</div><div class="skp-key wide" onclick="closeSearchKeypad()">เสร็จ</div>';
+  _skpSyncLabel();
+  scrim.classList.add('on');
+  requestAnimationFrame(function() { pad.classList.add('on'); });
+}
+function _skpSyncLabel() {
+  var q = document.getElementById('skpQ');
+  if (q && _skpTarget) q.textContent = _skpTarget.value || 'พิมพ์ตัวเลข…';
+}
+function _skpPress(k) {
+  if (!_skpTarget) return;
+  if (k === 'del') _skpTarget.value = _skpTarget.value.slice(0, -1);
+  else if (k === 'clr') _skpTarget.value = '';
+  else if (k === '.') { if (_skpTarget.value.indexOf('.') === -1) _skpTarget.value = (_skpTarget.value === '' ? '0.' : _skpTarget.value + '.'); }
+  else _skpTarget.value += k;
+  try { _skpTarget.dispatchEvent(new Event('input', { bubbles: true })); } catch (e) { if (typeof _skpTarget.oninput === 'function') _skpTarget.oninput(); }
+  _skpSyncLabel();
+}
+function closeSearchKeypad() {
+  var s = document.getElementById('skpScrim'), p = document.getElementById('skpPad');
+  if (p) p.classList.remove('on');
+  if (s) s.classList.remove('on');
+}
 
 // [v1.3] ตัวกรองค้นหา (ระดับ + ห้อง cascade) — แทรกแถวตัวกรองใต้ช่องค้นหาทุกหน้าด้วย JS (ไม่ต้องแก้ HTML ทีละหน้า)
 var SEARCH_CONTEXTS = ['balance','history','deposit','withdraw','redeem'];
