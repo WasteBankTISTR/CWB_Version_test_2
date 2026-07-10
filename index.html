@@ -436,7 +436,7 @@
       <div class="main">
         <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
         <div class="card">
-          <div class="card-title" style="justify-content:space-between"><span>✏️ แก้ไขราคา</span><span style="display:flex;gap:6px;align-items:center"><button onclick="openCatalogImport()" class="btn-refresh" style="width:auto;padding:4px 10px;font-size:14px;font-weight:700;line-height:1">📥 นำเข้าแคตตาล็อก</button><button onclick="refreshUpdatePrice()" class="btn-refresh">🔄</button></span></div>
+          <div class="card-title" style="justify-content:space-between"><span>✏️ แก้ไขราคา</span><span style="display:flex;gap:6px;align-items:center"><button onclick="openCatalogImport()" class="btn-refresh" style="width:auto;padding:4px 10px;font-size:16px;font-weight:700;line-height:1">📥 นำเข้าข้อมูล</button><button onclick="refreshUpdatePrice()" class="btn-refresh">🔄</button></span></div>
           <div id="updatePriceList" class="loading"><div class="spinner"></div></div>
           <button class="btn btn-primary hidden" id="savePricesBtn" onclick="saveMultiplePrices(this)">💾 บันทึกราคาทั้งหมด</button>
         </div>
@@ -448,7 +448,7 @@
       <div class="main">
         <button class="back-btn" onclick="showPage('updatePricePage')">← กลับ</button>
         <div class="card">
-          <div class="card-title">📥 นำเข้าแคตตาล็อกขยะ</div>
+          <div class="card-title">📥 นำเข้าข้อมูล</div>
           <input type="hidden" id="catUrl">
           <div style="font-size:12px;color:#888;margin-bottom:6px">แหล่งแคตตาล็อกกลาง</div>
           <div style="display:flex;align-items:center;gap:10px">
@@ -538,22 +538,38 @@
       <div class="main">
         <button class="back-btn" onclick="showPage('dashboardPage')">← กลับ</button>
         <div class="card">
-          <div class="card-title">📤 ส่งออกธุรกรรม</div>
-          <div style="font-size:13px;color:var(--text-light);margin-bottom:10px">เลือกประเภท ช่วงวันที่ และขอบเขต แล้วดาวน์โหลด Excel หรือ PDF</div>
-          <div style="margin-bottom:12px">
-            <div style="font-size:13px;font-weight:700;margin-bottom:5px">ประเภทรายการ</div>
-            <label style="margin-right:16px"><input type="checkbox" id="exTypeDep" checked> ฝาก</label>
-            <label style="margin-right:16px"><input type="checkbox" id="exTypeWd" checked> ถอน</label>
-            <label><input type="checkbox" id="exTypeRd" checked> แลก</label>
+          <div class="card-title" style="justify-content:space-between"><span>📤 ส่งออกธุรกรรม</span><span style="font-size:12px;color:var(--text-light);font-weight:400">Excel / PDF</span></div>
+
+          <div style="font-size:12px;font-weight:700;color:var(--text-light);margin:2px 0 6px">ประเภท</div>
+          <input type="checkbox" id="exTypeDep" checked style="display:none">
+          <input type="checkbox" id="exTypeWd" checked style="display:none">
+          <input type="checkbox" id="exTypeRd" checked style="display:none">
+          <div style="display:flex;gap:6px;margin-bottom:14px">
+            <button type="button" id="chip_exTypeDep" onclick="exToggleType('exTypeDep')" style="flex:1;padding:9px 0;border-radius:20px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid var(--border)">ฝาก</button>
+            <button type="button" id="chip_exTypeWd" onclick="exToggleType('exTypeWd')" style="flex:1;padding:9px 0;border-radius:20px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid var(--border)">ถอน</button>
+            <button type="button" id="chip_exTypeRd" onclick="exToggleType('exTypeRd')" style="flex:1;padding:9px 0;border-radius:20px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid var(--border)">แลก</button>
           </div>
-          <div style="display:flex;gap:8px;margin-bottom:12px">
-            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ตั้งแต่วันที่</div><input type="date" id="exFrom" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 10px;font-family:inherit;box-sizing:border-box"></div>
-            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ถึงวันที่</div><input type="date" id="exTo" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 10px;font-family:inherit;box-sizing:border-box"></div>
+
+          <div style="font-size:12px;font-weight:700;color:var(--text-light);margin-bottom:6px">ช่วงวันที่</div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:14px">
+            <input type="date" id="exFrom" onchange="exUpdateSummary()" style="flex:1;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit;box-sizing:border-box">
+            <span style="color:var(--text-light)">–</span>
+            <input type="date" id="exTo" onchange="exUpdateSummary()" style="flex:1;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit;box-sizing:border-box">
           </div>
-          <div id="exScopeRow" style="display:flex;gap:8px;margin-bottom:14px">
-            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ระดับ</div><select id="exZone" onchange="exOnZone()" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit"></select></div>
-            <div style="flex:1"><div style="font-size:13px;font-weight:700;margin-bottom:5px">ชั้น/ห้อง</div><select id="exClass" style="width:100%;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit"><option value="">ทุกชั้น/ห้อง</option></select></div>
+
+          <div id="exScopeRow">
+            <div style="font-size:12px;font-weight:700;color:var(--text-light);margin-bottom:6px">ขอบเขต</div>
+            <div style="display:flex;gap:6px;margin-bottom:14px">
+              <select id="exZone" onchange="exOnZone()" style="flex:1;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit"></select>
+              <select id="exClass" onchange="exUpdateSummary()" style="flex:1;height:42px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit"><option value="">ทุกชั้น/ห้อง</option></select>
+            </div>
           </div>
+
+          <div style="display:flex;align-items:center;gap:8px;background:#eef6ff;border-radius:10px;padding:9px 12px;margin-bottom:14px">
+            <span style="font-size:15px">ℹ️</span>
+            <span id="exSummary" style="font-size:12px;color:#185fa5;line-height:1.5">ฝาก + ถอน + แลก</span>
+          </div>
+
           <div style="display:flex;gap:8px">
             <button onclick="doExportTx('xlsx')" class="btn" style="flex:1;background:#15803d">📊 Excel</button>
             <button onclick="doExportTx('pdf')" class="btn" style="flex:1;background:#dc2626">📄 PDF</button>
@@ -833,6 +849,115 @@ function showToast(message, type) {
   setTimeout(function() { toast.remove(); }, 3000);
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// [in-app-fix] uiConfirm / uiPrompt — แทน confirm()/prompt() ของเบราว์เซอร์
+//   เพราะ in-app browser (LINE/Facebook) บล็อก confirm/prompt → ปุ่มค้าง
+//   เป็น modal DOM ในแอปเอง (bottom sheet สไตล์เดียวกับเมนู ⋯) คืนค่าเป็น Promise
+//   • uiConfirm(opts) → resolve(true=ยืนยัน / false=ยกเลิก/ปิด/แตะพื้นหลัง)
+//   • uiPrompt(opts)  → resolve(string=ค่าที่กรอก / null=ยกเลิก)  (เหมือน prompt เดิม)
+//   opts: string ล้วน = ข้อความ ; หรือ object { title, message, okText, cancelText,
+//         danger, defaultValue, placeholder, inputType, inputMode }
+// ═══════════════════════════════════════════════════════════════════════
+function _uiSheet_(build) {
+  // สร้างโครง overlay + bottom sheet ให้ helper ทั้งสองใช้ร่วมกัน
+  var ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100000;display:flex;align-items:flex-end';
+  var sheet = document.createElement('div');
+  sheet.style.cssText = 'background:#fff;width:100%;max-width:640px;margin:0 auto;border-radius:16px 16px 0 0;padding:18px 18px calc(14px + env(safe-area-inset-bottom));box-shadow:0 -6px 24px rgba(0,0,0,.15)';
+  ov.appendChild(sheet);
+  return { ov: ov, sheet: sheet };
+}
+function _uiTitleMsg_(sheet, opts) {
+  if (opts.title) {
+    var h = document.createElement('div');
+    h.textContent = opts.title;
+    h.style.cssText = 'font-size:16px;font-weight:700;color:#222;margin-bottom:8px';
+    sheet.appendChild(h);
+  }
+  if (opts.message) {
+    var msg = document.createElement('div');
+    msg.textContent = opts.message;
+    msg.style.cssText = 'font-size:14px;color:#444;line-height:1.55;white-space:pre-line;margin-bottom:16px';
+    sheet.appendChild(msg);
+  }
+}
+function uiConfirm(opts) {
+  if (typeof opts === 'string') opts = { message: opts };
+  opts = opts || {};
+  return new Promise(function(resolve) {
+    var ui = _uiSheet_(), ov = ui.ov, sheet = ui.sheet, settled = false;
+    var done = function(val) {
+      if (settled) return; settled = true;
+      document.removeEventListener('keydown', onKey);
+      if (ov.parentNode) ov.parentNode.removeChild(ov);
+      resolve(val);
+    };
+    _uiTitleMsg_(sheet, opts);
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px';
+    var cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.textContent = opts.cancelText || 'ยกเลิก';
+    cancel.style.cssText = 'flex:1;padding:13px;border:none;background:#f2f2f2;color:#555;font-size:15px;border-radius:12px;cursor:pointer';
+    cancel.onclick = function() { done(false); };
+    var ok = document.createElement('button');
+    ok.type = 'button';
+    ok.textContent = opts.okText || 'ยืนยัน';
+    ok.style.cssText = 'flex:1;padding:13px;border:none;color:#fff;font-size:15px;font-weight:600;border-radius:12px;cursor:pointer;background:' + (opts.danger ? '#f44336' : '#16a34a');
+    ok.onclick = function() { done(true); };
+    row.appendChild(cancel); row.appendChild(ok);
+    sheet.appendChild(row);
+    ov.onclick = function(e) { if (e.target === ov) done(false); };
+    var onKey = function(e) { if (e.key === 'Escape') done(false); else if (e.key === 'Enter') done(true); };
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+  });
+}
+function uiPrompt(opts) {
+  if (typeof opts === 'string') opts = { message: opts };
+  opts = opts || {};
+  return new Promise(function(resolve) {
+    var ui = _uiSheet_(), ov = ui.ov, sheet = ui.sheet, settled = false;
+    var done = function(val) {
+      if (settled) return; settled = true;
+      document.removeEventListener('keydown', onKey);
+      if (ov.parentNode) ov.parentNode.removeChild(ov);
+      resolve(val);
+    };
+    _uiTitleMsg_(sheet, opts);
+    var input = document.createElement('input');
+    input.type = opts.inputType || 'text';
+    if (opts.inputMode) input.setAttribute('inputmode', opts.inputMode);
+    if (opts.placeholder) input.placeholder = opts.placeholder;
+    input.value = (opts.defaultValue !== undefined && opts.defaultValue !== null) ? String(opts.defaultValue) : '';
+    // font-size:16px กัน iOS zoom ตอน focus
+    input.style.cssText = 'width:100%;box-sizing:border-box;padding:12px;border:1px solid #ddd;border-radius:12px;font-size:16px;margin-bottom:14px;outline:none';
+    input.onfocus = function() { input.style.borderColor = '#16a34a'; };
+    input.onblur = function() { input.style.borderColor = '#ddd'; };
+    sheet.appendChild(input);
+    var submit = function() { done(input.value); };
+    var row = document.createElement('div');
+    row.style.cssText = 'display:flex;gap:10px';
+    var cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.textContent = opts.cancelText || 'ยกเลิก';
+    cancel.style.cssText = 'flex:1;padding:13px;border:none;background:#f2f2f2;color:#555;font-size:15px;border-radius:12px;cursor:pointer';
+    cancel.onclick = function() { done(null); };
+    var ok = document.createElement('button');
+    ok.type = 'button';
+    ok.textContent = opts.okText || 'ตกลง';
+    ok.style.cssText = 'flex:1;padding:13px;border:none;color:#fff;font-size:15px;font-weight:600;border-radius:12px;cursor:pointer;background:' + (opts.danger ? '#f44336' : '#16a34a');
+    ok.onclick = submit;
+    row.appendChild(cancel); row.appendChild(ok);
+    sheet.appendChild(row);
+    ov.onclick = function(e) { if (e.target === ov) done(null); };
+    var onKey = function(e) { if (e.key === 'Escape') done(null); else if (e.key === 'Enter') submit(); };
+    document.addEventListener('keydown', onKey);
+    document.body.appendChild(ov);
+    setTimeout(function() { try { input.focus(); input.select(); } catch (e) {} }, 60);
+  });
+}
+
 // [v1.7] ── สรุปฝากขยะรายวัน ──
 var DS_TMONTH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 var DS_TMONTHF = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
@@ -999,6 +1124,34 @@ function _downloadSheet(url, fileName) {
   document.body.appendChild(ov);
 }
 
+// [style B] ชิปเลือกประเภท + บรรทัดสรุปสด
+function exSyncChip(id) {
+  var cb = document.getElementById(id), chip = document.getElementById('chip_' + id);
+  if (!cb || !chip) return;
+  if (cb.checked) { chip.style.background = '#1D9E75'; chip.style.color = '#fff'; chip.style.borderColor = '#1D9E75'; chip.style.fontWeight = '700'; }
+  else { chip.style.background = 'transparent'; chip.style.color = 'var(--text-light)'; chip.style.borderColor = 'var(--border)'; chip.style.fontWeight = '400'; }
+}
+function exToggleType(id) {
+  var cb = document.getElementById(id); if (!cb) return;
+  cb.checked = !cb.checked; exSyncChip(id); exUpdateSummary();
+}
+function exUpdateSummary() {
+  var el = document.getElementById('exSummary'); if (!el) return;
+  var types = [];
+  if (document.getElementById('exTypeDep').checked) types.push('ฝาก');
+  if (document.getElementById('exTypeWd').checked) types.push('ถอน');
+  if (document.getElementById('exTypeRd').checked) types.push('แลก');
+  var from = (document.getElementById('exFrom') || {}).value || '', to = (document.getElementById('exTo') || {}).value || '';
+  var days = '';
+  if (from && to) { var d = Math.round((new Date(to) - new Date(from)) / 86400000) + 1; if (d > 0) days = d + ' วัน'; }
+  var zone = (document.getElementById('exZone') || {}).value || '';
+  var cls = (document.getElementById('exClass') || {}).value || '';
+  var scope = cls || zone || 'ทุกระดับ';
+  var parts = [types.length ? types.join(' + ') : '— ยังไม่เลือกประเภท'];
+  if (days) parts.push(days);
+  parts.push(scope);
+  el.textContent = parts.join(' · ');
+}
 function openExportData() {
   var t = new Date();
   var today = t.getFullYear() + '-' + dsPad2(t.getMonth() + 1) + '-' + dsPad2(t.getDate());
@@ -1007,7 +1160,7 @@ function openExportData() {
   if (to && !to.value) to.value = today;
   var isSchool = (typeof PROFILE !== 'undefined' && PROFILE.mode === 'school');
   var scopeRow = document.getElementById('exScopeRow');
-  if (scopeRow) scopeRow.style.display = isSchool ? 'flex' : 'none';
+  if (scopeRow) scopeRow.style.display = isSchool ? '' : 'none';
   var zoneSel = document.getElementById('exZone');
   if (zoneSel) {
     var opts = '<option value="">ทุกระดับ</option>';
@@ -1016,15 +1169,18 @@ function openExportData() {
   }
   var cls = document.getElementById('exClass');
   if (cls) cls.innerHTML = '<option value="">ทุกชั้น/ห้อง</option>';
+  ['exTypeDep', 'exTypeWd', 'exTypeRd'].forEach(exSyncChip);
+  exUpdateSummary();
   showPage('exportDataPage');
 }
 function exOnZone() {
   var zone = document.getElementById('exZone').value;
   var cls = document.getElementById('exClass');
   cls.innerHTML = '<option value="">ทุกชั้น/ห้อง</option>';
-  if (!zone) return;
+  if (!zone) { exUpdateSummary(); return; }
   callServer('getClassrooms', { zone: zone }, function (r) {
     if (r && r.success) (r.data || []).forEach(function (c) { cls.innerHTML += '<option value="' + esc(c) + '">' + esc(c) + '</option>'; });
+    exUpdateSummary();
   });
 }
 function doExportTx(fmt) {
@@ -1937,16 +2093,17 @@ function txMenu(transId) {
 
 // [tx_void] ยกเลิกรายการ ฝาก/ถอน (ปุ่มเดียว) — direct=true (วันนี้) ยกเลิกเลย ; direct=false (เก่ากว่าวันนี้) ส่งคำขอไปแอดมิน
 //   สิทธิ์ tx_edit (manager/admin หรือ role ที่ถูกติ๊กให้) ; server ตรวจซ้ำทุกครั้ง
-function cancelTx(transId, memberId, direct) {
+async function cancelTx(transId, memberId, direct) {
   if (direct) {
-    if (!confirm('ยืนยันยกเลิกรายการนี้?\n\nระบบจะคืนยอดเงิน/แต้ม/สต็อก/สินค้าที่รายการนี้ทำไว้ และบันทึกร่องรอยไว้ในประวัติ\nดำเนินการแล้วย้อนกลับไม่ได้')) return;
+    var ok = await uiConfirm({ title: 'ยกเลิกรายการ', message: 'ยืนยันยกเลิกรายการนี้?\n\nระบบจะคืนยอดเงิน/แต้ม/สต็อก/สินค้าที่รายการนี้ทำไว้ และบันทึกร่องรอยไว้ในประวัติ\nดำเนินการแล้วย้อนกลับไม่ได้', okText: 'ยกเลิกรายการ', cancelText: 'ปิด', danger: true });
+    if (!ok) return;
     callServer('voidTransaction', { transId: transId }, function(r) {
       if (!r || !r.success) { showToast((r && r.message) || 'ยกเลิกไม่สำเร็จ', 'error'); return; }
       showToast(r.message || 'ยกเลิกรายการแล้ว', 'success');
       showHistory(memberId);
     });
   } else {
-    var reason = prompt('รายการนี้เก่ากว่าวันนี้ — ต้องส่งคำขอให้แอดมินอนุมัติ\n\nระบุเหตุผลการขอยกเลิก:');
+    var reason = await uiPrompt({ title: 'ขอยกเลิกรายการ', message: 'รายการนี้เก่ากว่าวันนี้ — ต้องส่งคำขอให้แอดมินอนุมัติ\n\nระบุเหตุผลการขอยกเลิก:', placeholder: 'เหตุผล...', okText: 'ส่งคำขอ' });
     if (reason === null) return;
     reason = (reason || '').trim();
     if (!reason) { showToast('กรุณาระบุเหตุผล', 'error'); return; }
@@ -1959,28 +2116,28 @@ function cancelTx(transId, memberId, direct) {
 }
 
 // [tx_edit] แก้น้ำหนักรายการฝาก (เฉพาะผู้มีสิทธิ์ tx_edit — server ตรวจซ้ำอีกชั้น)
-function editWeight(transId, memberId, oldWeight) {
+async function editWeight(transId, memberId, oldWeight) {
   var m = (APP._txMeta || {})[transId] || {};
   var unitBased = (m.unit && m.unit !== 'กก.' && m.uw > 0);
   var newWeight;
   var newQty = null;   // [UNIT FIX] จำนวนหน่วยที่ผู้ใช้กรอก → ส่งให้ backend ใช้ตรง ๆ กันเศษเพี้ยนจากการหารน้ำหนัก
   if (unitBased) {
     var oldQty = m.price ? Math.round(Math.abs(m.amount) / m.price * 100) / 100 : Math.round(oldWeight / m.uw * 100) / 100;
-    var vq = prompt('แก้จำนวนรายการนี้\nจำนวนเดิม: ' + oldQty + ' ' + m.unit + '\n\nใส่จำนวนใหม่ (' + m.unit + '):', oldQty);
+    var vq = await uiPrompt({ title: 'แก้จำนวนรายการ', message: 'จำนวนเดิม: ' + oldQty + ' ' + m.unit, defaultValue: oldQty, placeholder: 'จำนวนใหม่ (' + m.unit + ')', inputType: 'number', inputMode: 'decimal', okText: 'ถัดไป' });
     if (vq === null) return;
     var q = parseFloat(vq);
     if (!q || q <= 0) { showToast('จำนวนไม่ถูกต้อง', 'error'); return; }
     newWeight = Math.round(q * m.uw * 100) / 100;
     newQty = q;   // [UNIT FIX]
     if (Math.abs(newWeight - parseFloat(oldWeight)) < 0.001) { showToast('จำนวนเท่ากับของเดิม', 'error'); return; }
-    if (!confirm('ยืนยันแก้ ' + oldQty + ' → ' + q + ' ' + m.unit + ' (' + newWeight + ' กก.)?\nระบบจะยกเลิกรายการเดิมและออกรายการใหม่ให้')) return;
+    if (!(await uiConfirm({ title: 'ยืนยันการแก้ไข', message: 'แก้ ' + oldQty + ' → ' + q + ' ' + m.unit + ' (' + newWeight + ' กก.)?\nระบบจะยกเลิกรายการเดิมและออกรายการใหม่ให้', okText: 'ยืนยัน' }))) return;
   } else {
-    var v = prompt('แก้น้ำหนักรายการนี้\nน้ำหนักเดิม: ' + oldWeight + ' กก.\n\nใส่น้ำหนักใหม่ (กก.):', oldWeight);
+    var v = await uiPrompt({ title: 'แก้น้ำหนักรายการ', message: 'น้ำหนักเดิม: ' + oldWeight + ' กก.', defaultValue: oldWeight, placeholder: 'น้ำหนักใหม่ (กก.)', inputType: 'number', inputMode: 'decimal', okText: 'ถัดไป' });
     if (v === null) return;
     newWeight = parseFloat(v);
     if (!newWeight || newWeight <= 0) { showToast('น้ำหนักไม่ถูกต้อง', 'error'); return; }
     if (newWeight === parseFloat(oldWeight)) { showToast('น้ำหนักเท่ากับของเดิม', 'error'); return; }
-    if (!confirm('ยืนยันแก้น้ำหนัก ' + oldWeight + ' → ' + newWeight + ' กก.?\nระบบจะยกเลิกรายการเดิมและออกรายการใหม่ให้')) return;
+    if (!(await uiConfirm({ title: 'ยืนยันการแก้ไข', message: 'แก้น้ำหนัก ' + oldWeight + ' → ' + newWeight + ' กก.?\nระบบจะยกเลิกรายการเดิมและออกรายการใหม่ให้', okText: 'ยืนยัน' }))) return;
   }
   var _corrPayload = { transId: transId, newWeight: newWeight };
   if (newQty != null) _corrPayload.newQty = newQty;   // [UNIT FIX] ส่งจำนวนหน่วยไปด้วยเมื่อเป็นหน่วยลัง/ชิ้น
@@ -2122,7 +2279,7 @@ function renderDepCatalog() {
 function openDepKeypad(code) {
   var p = depPriceByCode(code);
   if (!p) return;
-  if ((parseFloat(p.price) || 0) <= 0) { showToast('ยังไม่ได้ตั้งราคา — นำเข้าแคตตาล็อกเพื่อบันทึกราคารับซื้อก่อน', 'error'); return; }
+  if ((parseFloat(p.price) || 0) <= 0) { showToast('ยังไม่ได้ตั้งราคา — นำเข้าข้อมูลเพื่อบันทึกราคารับซื้อก่อน', 'error'); return; }
   APP.depEdit = p;
   var inCart = null;
   for (var j = 0; j < APP.depositCart.length; j++) { if (APP.depositCart[j].code === code) { inCart = APP.depositCart[j]; break; } }
@@ -2338,9 +2495,10 @@ function renderRewardsList() {
   document.getElementById('rewardsList').innerHTML = html;
 }
 
-function doRedeem(rewardId) {
+async function doRedeem(rewardId) {
   if (!APP.currentMember) return;
-  var qty = prompt('จำนวนที่ต้องการแลก:', '1');
+  var qty = await uiPrompt({ title: 'แลกของรางวัล', message: 'จำนวนที่ต้องการแลก:', defaultValue: '1', inputType: 'number', inputMode: 'numeric', okText: 'แลก' });
+  if (qty === null) return;
   if (!qty || isNaN(qty) || parseInt(qty) < 1) return;
   callServer('redeemReward', { memberId: APP.currentMember.memberId, rewardId: rewardId, quantity: parseInt(qty) }, function(r) {
     if (r.success) {
@@ -3003,8 +3161,8 @@ function setUserStatus(username, status, btn) {
     else showToast(r.message, 'error');
   });
 }
-function resetUserPwd(username, btn) {
-  if (!confirm('รีเซ็ตรหัสผ่านของ @' + username + ' เป็นรหัสตาม role? ผู้ใช้จะต้องตั้งรหัสใหม่ตอน login')) return;
+async function resetUserPwd(username, btn) {
+  if (!(await uiConfirm({ title: 'รีเซ็ตรหัสผ่าน', message: 'รีเซ็ตรหัสผ่านของ @' + username + ' เป็นรหัสตาม role?\nผู้ใช้จะต้องตั้งรหัสใหม่ตอน login', okText: 'รีเซ็ต', danger: true }))) return;
   btn.disabled = true;
   callServer('resetPassword', { targetUsername: username }, function(r) {
     btn.disabled = false;
@@ -3122,7 +3280,7 @@ function buRoleChange(sel) {
   sc.disabled = off; sc.style.opacity = off ? '0.4' : '1';
   if (off) sc.value = '';
 }
-function importBulkUsers(btn) {
+async function importBulkUsers(btn) {
   var rowEls = document.querySelectorAll('#bulkRows .bulk-row');
   var rows = [];
   for (var i = 0; i < rowEls.length; i++) {
@@ -3136,7 +3294,7 @@ function importBulkUsers(btn) {
     rows.push({ username: u, displayName: nm, role: role, scope: scope, password: pwd });
   }
   if (!rows.length) { showToast('ยังไม่มีข้อมูล', 'error'); return; }
-  if (!confirm('นำเข้า ' + rows.length + ' คน?')) return;
+  if (!(await uiConfirm({ title: 'นำเข้าผู้ใช้', message: 'นำเข้า ' + rows.length + ' คน?', okText: 'นำเข้า' }))) return;
   btn.disabled = true;
   callServer('createUserBulk', { rows: rows }, function(r) {
     btn.disabled = false;
@@ -3286,13 +3444,17 @@ function renderVoidRequests(list) {
   box.innerHTML = h;
 }
 
-function resolveVoidReq(reqId, approve) {
-  var msg = approve
-    ? 'อนุมัติคำขอนี้?\nระบบจะยกเลิกรายการจริง และคืนยอด/แต้ม/สต็อกให้ (ย้อนกลับไม่ได้)'
-    : 'ปฏิเสธคำขอนี้?';
-  if (!confirm(msg)) return;
+async function resolveVoidReq(reqId, approve) {
+  var ok = await uiConfirm(approve
+    ? { title: 'อนุมัติคำขอ', message: 'อนุมัติคำขอนี้?\nระบบจะยกเลิกรายการจริง และคืนยอด/แต้ม/สต็อกให้ (ย้อนกลับไม่ได้)', okText: 'อนุมัติ & ยกเลิก', danger: true }
+    : { title: 'ปฏิเสธคำขอ', message: 'ปฏิเสธคำขอนี้?', okText: 'ปฏิเสธ', danger: true });
+  if (!ok) return;
   var note = '';
-  if (!approve) { note = prompt('เหตุผลที่ปฏิเสธ (ไม่บังคับ):') || ''; }
+  if (!approve) {
+    var r = await uiPrompt({ title: 'เหตุผลที่ปฏิเสธ', message: 'ระบุเหตุผล (ไม่บังคับ):', placeholder: 'เหตุผล...', okText: 'ยืนยัน' });
+    if (r === null) return;
+    note = r || '';
+  }
   callServer('resolveVoidRequest', { reqId: reqId, approve: approve, note: note }, function(r) {
     if (!r || !r.success) { showToast((r && r.message) || 'ดำเนินการไม่สำเร็จ', 'error'); return; }
     showToast(r.message || 'สำเร็จ', 'success');
