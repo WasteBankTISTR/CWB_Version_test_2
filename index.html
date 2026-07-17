@@ -385,10 +385,38 @@
           <div class="dep-sheet" id="depSheet">
             <div class="dep-grip"></div>
             <div class="dep-khead"><div class="dep-pill" id="depKPill"></div><div><b id="depKName"></b><span id="depKCode"></span></div></div>
+            <div id="depKindRow" style="display:none"></div>
             <div class="dep-fields" id="depFields"></div>
             <div class="dep-kout"><span class="amt" id="depKAmt">฿ 0</span><span class="co2" id="depKCo2"></span></div>
             <div class="dep-keys" id="depKeys"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════ บริจาคขยะ [v1.6 donate] ═══════════ -->
+    <div id="donatePage" class="page hidden">
+      <div class="main">
+        <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
+        <div class="card">
+          <div class="card-title">❤️ บริจาคขยะ</div>
+          <label class="form-label" style="font-weight:600">สมาชิกผู้บริจาค</label>
+          <div class="search-box" style="margin-top:6px"><span class="search-icon">🔎</span><input type="text" id="dnSearch" class="form-input" placeholder="ค้นหาสมาชิก / รหัส..." oninput="donateSearchMember()" style="padding-right:46px"><button type="button" class="kp-btn" onclick="openSearchKeypad('dnSearch')" aria-label="แป้นตัวเลข">🔢</button></div>
+          <div id="dnSearchResults"></div>
+          <div id="dnSelectedMember"></div>
+        </div>
+        <div class="card">
+          <div class="card-title">📦 รายการขยะบริจาค</div>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <select id="dnWaste" class="form-input form-select" style="flex:2;padding:12px"></select>
+            <input type="number" id="dnWeight" class="form-input" placeholder="น้ำหนัก" style="flex:1;padding:12px" step="0.01" min="0">
+            <button type="button" class="btn btn-primary" style="width:auto;padding:0 16px" onclick="addDonateItem()">เพิ่ม</button>
+          </div>
+          <div id="dnCartRows"><div style="color:#999;padding:8px;text-align:center">ยังไม่มีรายการ</div></div>
+          <div class="form-group" style="margin-top:10px"><input type="text" id="dnNote" class="form-input" placeholder="หมายเหตุ (ถ้ามี)"></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;font-weight:700"><span id="dnWeightSum">0 กก.</span><span style="color:var(--primary);font-size:18px" id="dnTotal">฿ 0</span></div>
+          <button class="btn btn-primary" id="dnSaveBtn" disabled onclick="processDonationSubmit(this)" style="width:100%">บันทึกการบริจาค</button>
+          <div style="font-size:11px;color:var(--text-light);text-align:center;margin-top:8px">ขยะเข้าคลัง (ขายต่อได้) · มูลค่าเป็นยอดบริจาค<br>สมาชิกได้แต้มสะสม · แต่เงินไม่เข้ายอดสมาชิก</div>
         </div>
       </div>
     </div>
@@ -560,6 +588,28 @@
       </div>
     </div>
 
+    <!-- ═══════════ รายงานส่วนต่างน้ำหนัก ═══════════ -->
+    <div id="weightReportPage" class="page hidden">
+      <div class="main">
+        <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
+        <div class="card">
+          <div class="card-title" style="justify-content:space-between"><span>⚖️ รายงานส่วนต่างน้ำหนัก</span><button onclick="loadWeightReport()" class="btn-refresh">🔄</button></div>
+          <div style="font-size:12px;color:var(--text-light);margin-bottom:10px">ตาชั่งเรา vs ร้านรับซื้อ · ตัดสต็อกตามน้ำหนักเรา</div>
+          <div class="form-row" style="gap:6px">
+            <div class="form-group"><label class="form-label">ร้านรับซื้อ</label><select id="wrBuyer" class="form-select" onchange="renderWeightReport()"><option value="">ทุกร้าน</option></select></div>
+            <div class="form-group"><label class="form-label">ประเภทขยะ</label><select id="wrType" class="form-select" onchange="renderWeightReport()"><option value="">ทุกประเภท</option></select></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+            <input type="date" id="wrFrom" onchange="renderWeightReport()" style="flex:1;height:40px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit;box-sizing:border-box">
+            <span style="color:var(--text-light)">–</span>
+            <input type="date" id="wrTo" onchange="renderWeightReport()" style="flex:1;height:40px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit;box-sizing:border-box">
+          </div>
+          <div id="wrContent" class="loading"><div class="spinner"></div></div>
+          <button class="btn btn-outline" onclick="exportWeightReport()" style="margin-top:12px">📤 ส่งออก CSV</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══════════ ร้านรับซื้อ ═══════════ -->
     <div id="buyerPage" class="page hidden">
       <div class="main">
@@ -715,6 +765,10 @@
         <div class="card">
           <div class="card-title" style="justify-content:space-between"><span>🛡️ จัดการสิทธิ์</span><button onclick="loadRolePerms()" class="btn-refresh">🔄</button></div>
           <div style="background:#fff8e1;color:#8a6d00;font-size:12px;padding:8px 12px;border-radius:9px;margin-bottom:10px">🔒 Admin เต็มสิทธิ์เสมอ · แตะจุดสีหัวคอลัมน์เพื่อเลือกทั้งบทบาท · จัดการผู้ใช้/สิทธิ์ = Admin เท่านั้น</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;background:#fff0f7;border:1px solid #ffcfe6;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+            <div><b style="color:#c0186f">❤️ เปิดรับบริจาคขยะ</b><div style="font-size:11px;color:#a06">แสดงเมนู "บริจาคขยะ" ให้ผู้มีสิทธิ์ · ไม่ใช่ทุกที่เปิดรับ</div></div>
+            <button type="button" id="donateToggleBtn" onclick="toggleDonateEnabled()" style="padding:8px 18px;border-radius:20px;border:none;font-weight:700;cursor:pointer;min-width:80px">—</button>
+          </div>
           <div id="permLegend" class="perm-legend"></div>
           <div id="permTableWrap"><div class="loading"><div class="spinner"></div></div></div>
           <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="saveRolePerms(this)">💾 บันทึกการตั้งค่า</button>
@@ -749,7 +803,7 @@
 // ════════════════════════════════════════════════════════════════════════
 
 // 🔧 วาง URL /exec ของคุณตรงนี้ (เส้นเดียวกับที่ใช้ทดสอบใน test.html)
-var API_URL = "https://script.google.com/macros/s/AKfycby9U27OEhROuF1Cs-bL-5yGwsozU4ovsgvbuIlzs21Cdx1d2NKDsFWAj7qPdZa1c8aS/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbwTxWelhNUmO8xQrsfxv5YAMU4HN73MTPBieSlN2EhDh8hOgUh_q3mL2chWTrlKFrrKhA/exec";
 
 function apiFetch(action, data) {
   data = data || {};
@@ -1388,7 +1442,7 @@ function showPage(pageId) {
 
   // [scope v1.6] หน้าค้นหาสมาชิก — operator ที่มี scope เปิดมาเห็นรายชื่อกลุ่มทันที (ไม่ scope = ว่าง)
   if (pageId === 'balancePage')  scopedAutoLoad('balance');
-  if (pageId === 'historyPage')  scopedAutoLoad('history');
+  if (pageId === 'historyPage')  autoLoadList('history');
   if (pageId === 'depositPage')  scopedAutoLoad('deposit');
   if (pageId === 'withdrawPage') scopedAutoLoad('withdraw');
   if (pageId === 'redeemPage')   scopedAutoLoad('redeem');
@@ -1400,6 +1454,7 @@ function showPage(pageId) {
   if (pageId === 'stockPage') loadStock();
   if (pageId === 'sellPage') loadSellData();
   if (pageId === 'buyerPage') loadBuyers();
+  if (pageId === 'weightReportPage') loadWeightReport();
   if (pageId === 'balanceReportPage') loadBalanceReport();
   if (pageId === 'dashboardPage') loadDashboard();
   if (pageId === 'manageRewardsPage') loadManageRewards();
@@ -1410,6 +1465,7 @@ function showPage(pageId) {
   if (pageId === 'rolePermPage') loadRolePerms();
   if (pageId === 'redeemPage') loadRewardsForRedeem();
   if (pageId === 'depositPage') { APP.depositCart = []; APP.currentMember = null; document.getElementById('depositForm').classList.add('hidden'); }
+  if (pageId === 'donatePage') initDonatePage();
   if (pageId === 'depositSummaryPage') dsAfterShow();
   if (pageId === 'withdrawSummaryPage') wsAfterShow();
   if (pageId === 'withdrawPage') { APP.currentMember = null; document.getElementById('withdrawForm').classList.add('hidden'); }
@@ -1587,8 +1643,9 @@ function loadMyHistory() {
     if (!r.success || !r.data.length) { el.innerHTML = '<div style="color:#999;padding:12px">ยังไม่มีรายการ</div>'; return; }
     el.innerHTML = r.data.map(function(t) {
       var isDep = t.type === 'ฝาก';
-      var col = isDep ? '#2e7d32' : '#c62828';
-      var sign = isDep ? '+' : '-';
+      var isDonate = t.type === 'บริจาค';
+      var col = isDonate ? '#e91e8c' : (isDep ? '#2e7d32' : '#c62828');
+      var sign = isDonate ? '' : (isDep ? '+' : '-');
       return '<div class="list-item" style="padding:10px 0;border-bottom:1px solid #f0f0f0">' +
         '<div style="display:flex;justify-content:space-between">' +
           '<div><div class="list-title">' + esc(t.type) + ' · ' + esc(t.wasteType) + '</div>' +
@@ -1605,7 +1662,27 @@ function loadMyHistory() {
 var _permData = null;
 var _roleColors = { admin:'#c62828', manager:'#7f77dd', operator:'#2e7d32', viewer:'#1565c0', member:'#ba7517' };
 
+function _renderDonateToggle() {
+  var btn = document.getElementById('donateToggleBtn');
+  if (!btn) return;
+  var on = !!(window.PROFILE && PROFILE.enableDonate);
+  btn.textContent = on ? 'เปิดอยู่' : 'ปิดอยู่';
+  btn.style.background = on ? '#06c755' : '#e0e0e0';
+  btn.style.color = on ? '#fff' : '#666';
+}
+function toggleDonateEnabled() {
+  var on = !(window.PROFILE && PROFILE.enableDonate);
+  callServer('setDonateEnabled', { enabled: on }, function(r) {
+    if (!r.success) { showToast(r.message || 'บันทึกไม่สำเร็จ', 'error'); return; }
+    if (typeof PROFILE !== 'undefined') PROFILE.enableDonate = r.data.enableDonate;
+    _renderDonateToggle();
+    showToast(r.data.enableDonate ? 'เปิดรับบริจาคขยะแล้ว · เมนูบริจาคจะแสดง' : 'ปิดรับบริจาคขยะแล้ว', 'success');
+    if (typeof buildMenu === 'function') buildMenu();
+  });
+}
+
 function loadRolePerms() {
+  _renderDonateToggle();
   document.getElementById('permTableWrap').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   callServer('getRolePermissions', {}, function(r) {
     if (!r.success) { document.getElementById('permTableWrap').innerHTML = '<div style="color:#c62828">' + esc(r.message) + '</div>'; return; }
@@ -1776,7 +1853,8 @@ function searchMemberFor(context, force) {
   var room = roomEl ? roomEl.value : '';
   var scoped = !!(APP.scopeFilters && APP.scopeFilters.scoped);
   var hasFilter = !!(zone || room);
-  if (!force && query.length < 2 && !hasFilter && !/^\d+$/.test(query)) { document.getElementById(context + 'SearchResults').innerHTML = ''; return; }
+  var browse = (!force && query.length === 0 && !hasFilter);   // [browse] ทุกระดับ+ทุกห้อง ไม่พิมพ์ → โชว์ 5 คนแรก (ยกเว้น auto-load ของ scoped ที่ force)
+  if (!force && !browse && query.length < 2 && !hasFilter && !/^\d+$/.test(query)) { document.getElementById(context + 'SearchResults').innerHTML = ''; return; }
   // [v1.7.4] scoped: ไม่ส่ง "ระดับ" (ชื่อที่เดาขึ้น ไม่ตรงคอลัมน์ ZONE) ไป server — ใช้กรอง "ชั้น" ฝั่ง client แทน
   var sendZone = scoped ? '' : zone;
   var levelClasses = null;
@@ -1786,10 +1864,11 @@ function searchMemberFor(context, force) {
   }
   clearTimeout(_searchTimer);
   _searchTimer = setTimeout(function() {
-    callServer('searchMember', { query: query, zone: sendZone, room: room, historyOnly: (context === 'history') }, function(r) {
+    callServer('searchMember', { query: query, zone: sendZone, room: room, historyOnly: (context === 'history'), browse: browse }, function(r) {
       if (!r.success) return;
       var list = r.data;
-      if (levelClasses) { var aset = {}; levelClasses.forEach(function(c) { aset[c] = true; }); list = list.filter(function(m) { return aset[m.classLabel]; }); }
+      if (levelClasses && levelClasses.length) { var aset = {}; levelClasses.forEach(function(c) { aset[c] = true; }); list = list.filter(function(m) { return aset[m.classLabel]; }); }
+      else if (levelClasses) { list = list.filter(function(m) { return m.zone === zone; }); }   // [staff-fix] ระดับไม่มีชั้น (บุคลากร/ครู) → กรองด้วยโซน (กัน aset ว่างตัดทุกคนทิ้ง)
       var html = list.map(function(m) {
         var cls = m.classLabel ? (' · ' + esc(m.classLabel)) : '';
         var no = (m.classNo !== undefined && m.classNo !== null && String(m.classNo) !== '') ? ((PROFILE.enableClassNo ? ' เลขที่ ' : ' เลขสมาชิก ') + esc(m.classNo)) : '';
@@ -1800,12 +1879,14 @@ function searchMemberFor(context, force) {
           '<div class="list-title">' + esc(m.fullName) + cls + no + '</div>' +
           '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + zoneSeg + ' | ฿' + (m.balance||0).toLocaleString() + ' | ' + (m.points||0).toLocaleString() + ' แต้ม</div></div>';
       }).join('');
-      document.getElementById(context + 'SearchResults').innerHTML = html || (force ? '' : '<div style="padding:14px;color:#999">ไม่พบ' + PROFILE.subjectWord + '</div>');
+      var _bnote = (browse && list.length) ? '<div style="padding:8px 14px;color:#999;font-size:12px;text-align:center">แสดง ' + list.length + ' คนแรก · พิมพ์ชื่อ/รหัสเพื่อค้นหาเพิ่มเติม</div>' : '';
+      document.getElementById(context + 'SearchResults').innerHTML = (html + _bnote) || (force ? '' : '<div style="padding:14px;color:#999">ไม่พบ' + PROFILE.subjectWord + '</div>');
     });
   }, 300);
 }
 
 function scopedAutoLoad(context) { searchMemberFor(context, true); }   // [scope v1.6] เปิดหน้ามาโหลดรายชื่อกลุ่มของ operator ทันที
+function autoLoadList(context) { var scoped = !!(APP.scopeFilters && APP.scopeFilters.scoped); searchMemberFor(context, scoped); }   // [auto-list] เปิดหน้ามาโชว์รายชื่อทันที: scoped=กลุ่มเต็ม · admin=browse 5 คนแรก (ไม่ต้องพิมพ์)
 
 // ═══ [in-app numeric keypad] แป้นตัวเลขในแอปสำหรับช่องค้นหา (กดไอคอน 🔢 เพื่อพิมพ์รหัส/เลขเร็ว — คีย์บอร์ดมือถือไม่ต้องเด้ง) ═══
 var _skpTarget = null;
@@ -2126,6 +2207,11 @@ function showBalance(memberId) {
 // ═══════════════════════════════════════════════════════════════════════
 // HISTORY
 // ═══════════════════════════════════════════════════════════════════════
+function _refreshHistoryAfterTx(memberId) {
+  // [history-fix] หลังทำธุรกรรม หน่วงสั้น ๆ ให้ชีตฝั่ง server commit เสร็จก่อน แล้วดึงประวัติใหม่ (กัน read-after-write เห็นของเก่า)
+  if (!memberId) return;
+  setTimeout(function() { if (typeof showHistory === 'function') showHistory(memberId); }, 500);
+}
 function showHistory(memberId) {
   callServer('getMemberHistory', { memberId: memberId, limit: 30, includeSummary: true }, function(r) {
     if (!r.success) { showToast(r.message, 'error'); return; }
@@ -2143,12 +2229,13 @@ function showHistory(memberId) {
       r.data.forEach(function(t) {
         var amt = t.amount || 0;
         var isDeposit = t.type === 'ฝาก';
+        var isDonate = t.type === 'บริจาค';
         var isReversal = isDeposit && amt < 0;            // แถวยกเลิกของเดิม
         var edited = (t.note || '').indexOf('[แก้แล้ว]') !== -1;
-        var icon = isReversal ? '↩️' : (isDeposit ? '💰' : '💸');
+        var icon = isDonate ? '❤️' : (isReversal ? '↩️' : (isDeposit ? '💰' : '💸'));
         var positive = isDeposit && amt >= 0;
-        var cls = positive ? 'positive' : 'negative';
-        var sign = positive ? '+' : '−';
+        var cls = isDonate ? 'positive' : (positive ? 'positive' : 'negative');
+        var sign = isDonate ? '' : (positive ? '+' : '−');
         var pts = t.pointsEarned ? ' (' + (t.pointsEarned > 0 ? '+' : '') + t.pointsEarned + ' แต้ม)' : '';
         // [UNIT] แสดงจำนวน/น้ำหนักต่อรายการ (ฝากที่มีน้ำหนัก): หน่วยลัง → "3 ลัง (45 กก.)"
         var qtyInfo = '';
@@ -2226,7 +2313,7 @@ async function cancelTx(transId, memberId, direct) {
     callServer('voidTransaction', { transId: transId }, function(r) {
       if (!r || !r.success) { showToast((r && r.message) || 'ยกเลิกไม่สำเร็จ', 'error'); return; }
       showToast(r.message || 'ยกเลิกรายการแล้ว', 'success');
-      showHistory(memberId);
+      _refreshHistoryAfterTx(memberId);
     });
   } else {
     var reason = await uiPrompt({ title: 'ขอยกเลิกรายการ', message: 'รายการนี้เก่ากว่าวันนี้ — ต้องส่งคำขอให้แอดมินอนุมัติ\n\nระบุเหตุผลการขอยกเลิก:', placeholder: 'เหตุผล...', okText: 'ส่งคำขอ' });
@@ -2236,7 +2323,7 @@ async function cancelTx(transId, memberId, direct) {
     callServer('requestVoid', { transId: transId, reason: reason }, function(r) {
       if (!r || !r.success) { showToast((r && r.message) || 'ส่งคำขอไม่สำเร็จ', 'error'); return; }
       showToast(r.message || 'ส่งคำขอไปแอดมินแล้ว', 'success');
-      showHistory(memberId);
+      _refreshHistoryAfterTx(memberId);
     });
   }
 }
@@ -2270,7 +2357,7 @@ async function editWeight(transId, memberId, oldWeight) {
   callServer('correctDepositWeight', _corrPayload, function(r) {
     if (!r || !r.success) { showToast((r && r.message) || 'แก้ไม่สำเร็จ', 'error'); return; }
     showToast(r.message || 'แก้สำเร็จ', 'success');
-    showHistory(memberId);
+    _refreshHistoryAfterTx(memberId);
   });
 }
 
@@ -2409,6 +2496,7 @@ function openDepKeypad(code) {
   APP.depEdit = p;
   var inCart = null;
   for (var j = 0; j < APP.depositCart.length; j++) { if (APP.depositCart[j].code === code) { inCart = APP.depositCart[j]; break; } }
+  APP.depKind = (inCart && inCart.kind) ? inCart.kind : 'deposit';   // [v1.6 donate]
   var unit = String(p.unit || 'กก.'), uw = parseFloat(p.unitWeight) || 0;
   APP.depUnitBased = (unit !== 'กก.' && uw > 0);
   APP.depUnit = unit; APP.depUW = uw;
@@ -2419,6 +2507,7 @@ function openDepKeypad(code) {
   document.getElementById('depKName').textContent = p.name;
   var co2f = parseFloat(p.multiply) || 0;
   document.getElementById('depKCode').textContent = p.code + ' · ' + depCatName(p.category) + (co2f > 0 ? (' · ลด CO₂ ' + co2f + '/กก.') : '');
+  renderDepKindToggle();
   renderDepFields();
   renderDepKeys();
   updateDepKeypad();
@@ -2430,15 +2519,37 @@ function closeDepSheet() {
   document.getElementById('depSheet').classList.remove('on');
   APP.depEdit = null;
 }
+// [v1.6 donate] ปุ่มสลับ ฝาก/บริจาค ใน keypad (โชว์เมื่อเปิดสวิตช์บริจาค)
+function renderDepKindToggle() {
+  var row = document.getElementById('depKindRow');
+  if (!row) return;
+  if (!(window.PROFILE && PROFILE.enableDonate)) { row.style.display = 'none'; row.innerHTML = ''; return; }
+  var k = APP.depKind || 'deposit';
+  row.style.display = 'flex';
+  row.style.gap = '8px';
+  row.style.margin = '4px 0 10px';
+  var depOn = (k === 'deposit'), donOn = (k === 'donate');
+  row.innerHTML =
+    '<button type="button" onclick="setDepKind(\'deposit\')" style="flex:1;padding:9px;border-radius:9px;font-weight:600;cursor:pointer;border:2px solid ' + (depOn ? 'var(--primary);background:var(--primary);color:#fff' : 'var(--border);background:#fff;color:#555') + '">💰 ฝาก</button>' +
+    '<button type="button" onclick="setDepKind(\'donate\')" style="flex:1;padding:9px;border-radius:9px;font-weight:600;cursor:pointer;border:2px solid ' + (donOn ? '#e91e8c;background:#e91e8c;color:#fff' : 'var(--border);background:#fff;color:#555') + '">❤️ บริจาค</button>';
+}
+function setDepKind(k) {
+  APP.depKind = k;
+  renderDepKindToggle();
+  renderDepFields();
+  updateDepKeypad();
+}
+
 function renderDepFields() {
   var p = APP.depEdit, price = parseFloat(p.price) || 0, html = '';
+  var showPrice = (APP.depKind !== 'donate');   // [v1.6 donate] บริจาคไม่โชว์ราคา
   if (APP.depUnitBased) {
     html += '<div class="dep-fld ' + (APP.depFocus === 'q' ? 'act' : '') + '" onclick="depFocusField(\'q\')"><div class="fl">จำนวน (' + esc(APP.depUnit) + ')</div><div class="fv"><span id="depFvQ">0</span></div></div>';
     html += '<div class="dep-fld ' + (APP.depFocus === 'w' ? 'act' : '') + '" onclick="depFocusField(\'w\')"><div class="fl">น้ำหนัก</div><div class="fv"><span id="depFvW">0</span><span class="u">กก.</span></div></div>';
-    html += '<div class="dep-fld ro"><div class="fl">ราคา/' + esc(APP.depUnit) + '</div><div class="fv">' + price + '<span class="u">฿</span></div></div>';
+    if (showPrice) html += '<div class="dep-fld ro"><div class="fl">ราคา/' + esc(APP.depUnit) + '</div><div class="fv">' + price + '<span class="u">฿</span></div></div>';
   } else {
     html += '<div class="dep-fld ' + (APP.depFocus === 'w' ? 'act' : '') + '" onclick="depFocusField(\'w\')"><div class="fl">น้ำหนัก</div><div class="fv"><span id="depFvW">0</span><span class="u">กก.</span></div></div>';
-    html += '<div class="dep-fld ro"><div class="fl">ราคา/กก. (ล็อกจากชีต)</div><div class="fv">' + price + '<span class="u">฿</span></div></div>';
+    if (showPrice) html += '<div class="dep-fld ro"><div class="fl">ราคา/กก. (ล็อกจากชีต)</div><div class="fv">' + price + '<span class="u">฿</span></div></div>';
   }
   document.getElementById('depFields').innerHTML = html;
 }
@@ -2471,10 +2582,15 @@ function updateDepKeypad() {
   var w = depNumW(), q = depNumQ();
   var elW = document.getElementById('depFvW'); if (elW) elW.textContent = APP.depBufW === '' ? '0' : APP.depBufW;
   var elQ = document.getElementById('depFvQ'); if (elQ) elQ.textContent = APP.depBufQ === '' ? '0' : APP.depBufQ;
-  var amount = APP.depUnitBased ? (q * price) : (w * price);
-  document.getElementById('depKAmt').textContent = depMoney(amount);
-  var co2f = parseFloat(p.multiply) || 0;
-  document.getElementById('depKCo2').textContent = (co2f > 0 && w > 0) ? ('🌱 ลด CO₂ ' + (Math.round(co2f * w * 100) / 100) + ' กก.') : '';
+  if (APP.depKind === 'donate') {
+    document.getElementById('depKAmt').textContent = '❤️ บริจาค';
+    document.getElementById('depKCo2').textContent = '';
+  } else {
+    var amount = APP.depUnitBased ? (q * price) : (w * price);
+    document.getElementById('depKAmt').textContent = depMoney(amount);
+    var co2f = parseFloat(p.multiply) || 0;
+    document.getElementById('depKCo2').textContent = (co2f > 0 && w > 0) ? ('🌱 ลด CO₂ ' + (Math.round(co2f * w * 100) / 100) + ' กก.') : '';
+  }
 }
 function addDepCartItem() {
   var p = APP.depEdit; if (!p) return;
@@ -2489,7 +2605,8 @@ function addDepCartItem() {
       code: p.code, name: p.name, category: p.category,
       unit: String(p.unit || 'กก.'), unitWeight: parseFloat(p.unitWeight) || 0,
       price: price, multiply: parseFloat(p.multiply) || 0,
-      weight: w, qty: APP.depUnitBased ? q : w
+      weight: w, qty: APP.depUnitBased ? q : w,
+      kind: (APP.depKind || 'deposit')
     };
     if (idx >= 0) APP.depositCart[idx] = row; else APP.depositCart.push(row);
   }
@@ -2505,25 +2622,31 @@ function renderDepCart() {
   } else {
     rows.innerHTML = cart.map(function(c, i) {
       var unitBased = (c.unit !== 'กก.' && c.unitWeight > 0);
+      var sub = unitBased ? (c.qty + ' ' + esc(c.unit)) : (c.weight + ' กก.');
+      if (c.kind === 'donate') {
+        return '<div class="dep-crow"><span class="cn">❤️ ' + esc(c.name) + '</span><span class="cw">' + sub + '</span>' +
+          '<span class="cp" style="color:#e91e8c">บริจาค</span><span class="cx" onclick="removeDepCartItem(' + i + ')">✕</span></div>';
+      }
       var amount = (unitBased ? c.qty : c.weight) * c.price;
-      var sub = unitBased ? (c.qty + ' ' + esc(c.unit) + ' × ' + c.price) : (c.weight + ' กก. × ' + c.price);
-      return '<div class="dep-crow"><span class="cn">' + esc(c.name) + '</span><span class="cw">' + sub + '</span>' +
+      return '<div class="dep-crow"><span class="cn">' + esc(c.name) + '</span><span class="cw">' + sub + ' × ' + c.price + '</span>' +
         '<span class="cp">' + depMoney(amount) + '</span><span class="cx" onclick="removeDepCartItem(' + i + ')">✕</span></div>';
     }).join('');
   }
-  var total = 0, co2 = 0;
+  var total = 0, co2 = 0, donW = 0, donCnt = 0;
   cart.forEach(function(c) {
     var unitBased = (c.unit !== 'กก.' && c.unitWeight > 0);
+    if (c.kind === 'donate') { donW += c.weight; donCnt++; return; }
     total += (unitBased ? c.qty : c.weight) * c.price;
     if (c.multiply > 0) co2 += c.multiply * c.weight;
   });
-  document.getElementById('depTotal').textContent = depMoney(total);
+  document.getElementById('depTotal').textContent = depMoney(total) + (donCnt ? (' · ❤️ ' + (Math.round(donW * 100) / 100) + ' กก.') : '');
   document.getElementById('depCnt').textContent = cart.length + ' รายการ';
   document.getElementById('depCo2').textContent = co2 > 0 ? ('🌱 ลด CO₂ ' + (Math.round(co2 * 10) / 10) + ' กก.') : '';
   var btn = document.getElementById('depSaveBtn');
   btn.disabled = !cart.length || !APP.currentMember;
-  btn.textContent = cart.length ? ('บันทึกการฝาก ' + cart.length + ' รายการ') : 'บันทึกการฝาก';
+  btn.textContent = cart.length ? ('บันทึก ' + cart.length + ' รายการ') : 'บันทึกการฝาก';
 }
+
 function removeDepCartItem(i) { APP.depositCart.splice(i, 1); renderDepCatalog(); renderDepCart(); }
 
 // [UNIT] หาหน่วยของประเภทขยะจาก APP.prices (fallback = กก.) — ใช้ในหน้าประวัติด้วย จึงคงไว้
@@ -2535,22 +2658,40 @@ function depUnitOf(name) {
 function processDeposit(btn) {
   if (!APP.currentMember) { showToast('กรุณาเลือก' + (PROFILE.subjectWord || 'สมาชิก'), 'error'); return; }
   var cart = APP.depositCart || [];
-  // payload เดิม: ส่ง wasteName (ชื่อเต็ม) + weight (กก.) + qty — backend คิดราคา/แต้ม/CO2 เองจากชีต
-  var items = cart.filter(function(c) { return c.weight > 0; }).map(function(c) {
-    return { wasteName: c.name, unit: c.unit, unitWeight: c.unitWeight, qty: c.qty, weight: c.weight, price: c.price };
-  });
-  if (items.length === 0) { showToast('กรุณาเพิ่มรายการขยะ (แตะการ์ด + ใส่จำนวน/น้ำหนัก)', 'error'); return; }
+  function mapItem(c) { return { wasteName: c.name, unit: c.unit, unitWeight: c.unitWeight, qty: c.qty, weight: c.weight, price: c.price }; }
+  var depItems = cart.filter(function(c) { return c.kind !== 'donate' && c.weight > 0; }).map(mapItem);
+  var donItems = cart.filter(function(c) { return c.kind === 'donate' && c.weight > 0; }).map(mapItem);
+  if (!depItems.length && !donItems.length) { showToast('กรุณาเพิ่มรายการขยะ (แตะการ์ด + ใส่จำนวน/น้ำหนัก)', 'error'); return; }
   btn.disabled = true;
-  callServer('processDeposit', { memberId: APP.currentMember.memberId, items: items, note: document.getElementById('depositNote').value }, function(r) {
-    setTimeout(function() { btn.disabled = false; }, 30000);
-    if (r.success) {
-      showToast(r.message, 'success');
-      APP.depositCart = [];
-      var _dn = document.getElementById('depositNote'); if (_dn) _dn.value = '';
-      selectDepositMember(APP.currentMember.memberId);   // รีเฟรชยอดสมาชิก + ล้างตะกร้า
-    } else { showToast(r.message, 'error'); btn.disabled = false; }
-  });
+  var mid = APP.currentMember.memberId;
+  var note = document.getElementById('depositNote').value;
+  var results = [];
+  function finish() {
+    btn.disabled = false;
+    APP.depositCart = [];
+    var _dn = document.getElementById('depositNote'); if (_dn) _dn.value = '';
+    showToast(results.join(' · ') || 'บันทึกสำเร็จ', 'success');
+    selectDepositMember(mid);   // รีเฟรชยอด + ล้างตะกร้า
+  }
+  function doDonate() {
+    if (!donItems.length) { finish(); return; }
+    callServer('processDonation', { memberId: mid, items: donItems, note: note }, function(r) {
+      if (!r.success) { showToast('บริจาค: ' + r.message, 'error'); btn.disabled = false; return; }
+      results.push('บริจาค ' + (r.data.totalWeight || 0) + ' กก.');
+      finish();
+    });
+  }
+  if (depItems.length) {
+    callServer('processDeposit', { memberId: mid, items: depItems, note: note }, function(r) {
+      if (!r.success) { showToast('ฝาก: ' + r.message, 'error'); btn.disabled = false; return; }
+      results.push(r.message || 'ฝากสำเร็จ');
+      doDonate();
+    });
+  } else {
+    doDonate();
+  }
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════
 // WITHDRAW
@@ -2774,13 +2915,16 @@ function loadSellData() {
       APP.saleStockMap = {};
       r1.data.forEach(function(s) { APP.saleStockMap[s.wasteType] = s.totalWeight; });
       APP.saleCart = [];
+      APP.sellMode = 'lot';
       var buyerOptions = r2.data.map(function(b) { return '<option value="' + esc(b.id) + '" data-name="' + esc(b.name) + '">' + esc(b.name) + '</option>'; }).join('');
       document.getElementById('sellForm').innerHTML =
         '<div style="font-weight:700;margin-bottom:8px">เพิ่มรายการขาย</div>' +
         '<div class="form-group"><label class="form-label">ประเภทขยะ · (คงเหลือในสต๊อก)</label><select id="sellWaste" class="form-select" onchange="onSellTypeChange()"><option value="">-- เลือก --</option></select></div>' +
-        '<div class="form-group hidden" id="sellQtyWrap"><label class="form-label" id="sellQtyLabel">จำนวน</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellQty" class="form-input" oninput="onSellQty()"></div></div>' +
-        '<div class="form-row"><div class="form-group"><label class="form-label">น้ำหนัก (กก.)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellWeight" class="form-input" oninput="onSellWeightInput()"></div></div>' +
-        '<div class="form-group"><label class="form-label" id="sellPriceLabel">ราคาขาย/กก. (พิมพ์เอง)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellPrice" class="form-input" oninput="sellValidate()"></div></div></div>' +
+        '<div style="display:flex;gap:8px;margin-bottom:10px"><button type="button" id="sellModeLot" onclick="sellSetMode(\'lot\')" style="flex:1;padding:9px;border-radius:9px;font-weight:600;cursor:pointer;border:2px solid var(--primary);background:var(--primary);color:#fff">ขายทั้งหมด (ยกลอต)</button><button type="button" id="sellModePartial" onclick="sellSetMode(\'partial\')" style="flex:1;padding:9px;border-radius:9px;font-weight:600;cursor:pointer;border:2px solid var(--border);background:#fff;color:#555">ขายบางส่วน</button></div>' +
+        '<div class="form-group"><label class="form-label" id="sellBankLabel">น้ำหนักเรา = สต็อกทั้งหมด (ยกลอต)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellBankWeight" class="form-input" oninput="onSellBankInput()"></div></div>' +
+        '<div class="form-row"><div class="form-group"><label class="form-label">น้ำหนักร้านชั่ง (จ่ายเงิน)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellBuyerWeight" class="form-input" oninput="sellValidate()"></div></div>' +
+        '<div class="form-group"><label class="form-label">ราคาขาย/กก. (พิมพ์เอง)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellPrice" class="form-input" oninput="sellValidate()"></div></div></div>' +
+        '<div id="sellDiffBox" style="display:none;font-size:13px;padding:8px 10px;border-radius:9px;margin-bottom:10px"></div>' +
         '<div id="sellWarn" class="hidden" style="font-size:13px;color:#a32d2d;background:#fdecec;border-radius:9px;padding:8px 10px;margin-bottom:10px"></div>' +
         '<button id="sellAddBtn" class="btn btn-primary" onclick="sellAddItem()" style="margin-bottom:14px">➕ เพิ่มรายการ</button>' +
         '<div style="border-top:1px solid #eee;padding-top:12px"><div style="font-weight:700;margin-bottom:6px">รายการขาย <span id="sellCartCount" style="color:#888;font-weight:400;font-size:13px"></span></div>' +
@@ -2834,84 +2978,91 @@ function priceOf(name) {
   if (APP && APP.prices) { for (var i = 0; i < APP.prices.length; i++) { if (APP.prices[i].name === name) return APP.prices[i]; } }
   return null;
 }
+function sellSetMode(m) {
+  APP.sellMode = m;
+  var lot = document.getElementById('sellModeLot'), par = document.getElementById('sellModePartial');
+  var on = 'var(--primary);background:var(--primary);color:#fff', off = 'var(--border);background:#fff;color:#555';
+  if (lot) lot.style.cssText = 'flex:1;padding:9px;border-radius:9px;font-weight:600;cursor:pointer;border:2px solid ' + (m === 'lot' ? on : off);
+  if (par) par.style.cssText = 'flex:1;padding:9px;border-radius:9px;font-weight:600;cursor:pointer;border:2px solid ' + (m === 'partial' ? on : off);
+  onSellTypeChange();
+}
 function onSellTypeChange() {
-  _sellWeightTouched = false;   // [v1.4.1] เปลี่ยนชนิด = เริ่มใหม่ เติมน้ำหนักอัตโนมัติได้
-  var t = document.getElementById('sellWaste').value, p = priceOf(t);
-  var unit = (p && p.unit) ? p.unit : 'กก.', uw = p ? (parseFloat(p.unitWeight) || 0) : 0;
-  var unitBased = (unit !== 'กก.' && uw > 0);
-  document.getElementById('sellQtyWrap').classList.toggle('hidden', !unitBased);
-  document.getElementById('sellQtyLabel').textContent = 'จำนวน (' + unit + ')';
-  document.getElementById('sellPriceLabel').textContent = 'ราคาขาย/' + (unitBased ? unit : 'กก.') + ' (พิมพ์เอง)';
-  if (!unitBased) document.getElementById('sellQty').value = '';
+  var t = document.getElementById('sellWaste').value;
+  var bankInput = document.getElementById('sellBankWeight'), bankLabel = document.getElementById('sellBankLabel');
+  if (APP.sellMode === 'lot') {
+    bankInput.value = t ? sellRemaining(t).toFixed(2) : '';
+    bankInput.readOnly = true; bankInput.style.background = '#f2f4f3';
+    bankLabel.textContent = 'น้ำหนักเรา = สต็อกทั้งหมด (ยกลอต)';
+  } else {
+    bankInput.readOnly = false; bankInput.style.background = '';
+    bankLabel.textContent = 'น้ำหนักเรา (แบ่งขาย) → ตัดสต็อก';
+  }
   sellValidate();
 }
-// [v1.4.1] จำว่าผู้ใช้แก้ช่องน้ำหนักเองหรือยัง (ถ้าแก้เอง = ไม่เขียนทับด้วยค่าคำนวณจากจำนวน)
-//   ช่องว่าง = ยังไม่แก้ → ให้เติมอัตโนมัติได้อีก ; มีค่า = แก้เอง → ปกป้องไว้
-var _sellWeightTouched = false;
-function onSellWeightInput() {
-  _sellWeightTouched = (document.getElementById('sellWeight').value.trim() !== '');
-  sellValidate();
-}
-function onSellQty() {
-  var p = priceOf(document.getElementById('sellWaste').value), uw = p ? (parseFloat(p.unitWeight) || 0) : 0;
-  var q = parseFloat(document.getElementById('sellQty').value) || 0;
-  // [v1.4.1] เติมน้ำหนักอัตโนมัติเฉพาะเมื่อผู้ใช้ยังไม่แก้ช่องน้ำหนักเอง (ใช้ flag แทน focus — รองรับ keypad ในแอป)
-  if (uw > 0 && !_sellWeightTouched) { document.getElementById('sellWeight').value = (Math.round(q * uw * 100) / 100) || ''; }
-  sellValidate();
-}
+function onSellBankInput() { sellValidate(); }
 function sellRenderCart() {
   var list = document.getElementById('sellCartList'); if (!list) return;
   var cart = APP.saleCart || [];
   if (!cart.length) { list.innerHTML = '<div style="text-align:center;color:#bbb;padding:16px;font-size:14px">ยังไม่มีรายการ</div>'; }
   else {
     list.innerHTML = cart.map(function(it, i) {
-      var ub = (it.unit && it.unit !== 'กก.' && it.unitWeight > 0);
-      var amt = Math.round((ub ? it.qty : it.weight) * it.sellPrice * 100) / 100;
-      var detail = ub
-        ? (it.qty + ' ' + esc(it.unit) + ' (' + it.weight.toFixed(2) + ' กก.) × ฿' + it.sellPrice + '/' + esc(it.unit))
-        : (it.weight.toFixed(2) + ' กก. × ฿' + it.sellPrice + '/กก.');
-      return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #f1f1f1"><div style="flex:1"><div style="font-weight:700;font-size:14px">' + esc(it.wasteName) + '</div><div style="font-size:12px;color:#888">' + detail + '</div></div>' +
+      var amt = Math.round(it.buyerWeight * it.sellPrice * 100) / 100;
+      var diff = Math.round((it.bankWeight - it.buyerWeight) * 100) / 100;
+      var modeLabel = (it.mode === 'lot') ? 'ยกลอต' : 'บางส่วน';
+      var detail = 'เรา ' + it.bankWeight.toFixed(2) + ' · ร้าน ' + it.buyerWeight.toFixed(2) + ' กก. × ฿' + it.sellPrice + (Math.abs(diff) > 0.001 ? (' · ต่าง ' + diff.toFixed(2)) : '');
+      return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #f1f1f1"><div style="flex:1"><div style="font-weight:700;font-size:14px">' + esc(it.wasteName) + ' <span style="font-size:11px;font-weight:400;color:#888">' + modeLabel + '</span></div><div style="font-size:12px;color:#888">' + detail + '</div></div>' +
         '<div style="font-weight:700;color:#0f6e56;font-size:14px">฿' + amt.toFixed(2) + '</div>' +
         '<button onclick="sellRemoveItem(' + i + ')" class="btn-refresh" style="color:#f44336;width:auto;padding:2px 8px" aria-label="ลบ">🗑</button></div>';
     }).join('');
   }
-  var tw = cart.reduce(function(s, it) { return s + it.weight; }, 0);
-  var ta = cart.reduce(function(s, it) { var ub = (it.unit && it.unit !== 'กก.' && it.unitWeight > 0); return s + (ub ? it.qty : it.weight) * it.sellPrice; }, 0);
+  var tw = cart.reduce(function(s, it) { return s + it.bankWeight; }, 0);
+  var ta = cart.reduce(function(s, it) { return s + it.buyerWeight * it.sellPrice; }, 0);
   document.getElementById('sellTotalWt').textContent = tw.toFixed(2) + ' กก.';
   document.getElementById('sellTotalAmt').textContent = '฿' + (Math.round(ta * 100) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   document.getElementById('sellCartCount').textContent = cart.length ? '(' + cart.length + ' รายการ)' : '';
 }
 function sellValidate() {
   var sel = document.getElementById('sellWaste'); if (!sel) return;
-  var t = sel.value, w = parseFloat(document.getElementById('sellWeight').value), p = parseFloat(document.getElementById('sellPrice').value);
-  var pi = priceOf(t), unit = (pi && pi.unit) ? pi.unit : 'กก.', uw = pi ? (parseFloat(pi.unitWeight) || 0) : 0;
-  var unitBased = (unit !== 'กก.' && uw > 0), q = parseFloat(document.getElementById('sellQty').value) || 0;
-  var rem = sellRemaining(t), over = !!(t && w > rem);
+  var t = sel.value;
+  var bank = parseFloat(document.getElementById('sellBankWeight').value) || 0;
+  var buyer = parseFloat(document.getElementById('sellBuyerWeight').value) || 0;
+  var price = parseFloat(document.getElementById('sellPrice').value) || 0;
+  var rem = t ? sellRemaining(t) : 0, over = !!(t && bank > rem + 0.0001);
   var warn = document.getElementById('sellWarn');
-  if (over) { warn.classList.remove('hidden'); warn.innerHTML = '⚠️ น้ำหนักเกินสต๊อก! ' + esc(t) + ' คงเหลือ ' + rem.toFixed(2) + ' กก.'; }
+  if (over) { warn.classList.remove('hidden'); warn.innerHTML = '⚠️ น้ำหนักเราเกินสต๊อก! ' + esc(t) + ' คงเหลือ ' + rem.toFixed(2) + ' กก.'; }
   else warn.classList.add('hidden');
-  var ok = !!(t && w > 0 && p > 0 && !over && (!unitBased || q > 0));
+  var diffBox = document.getElementById('sellDiffBox');
+  if (t && bank > 0 && buyer > 0) {
+    var diff = Math.round((bank - buyer) * 100) / 100;
+    var pct = bank > 0 ? Math.round(diff / bank * 1000) / 10 : 0;
+    var amt = Math.round(buyer * price * 100) / 100;
+    var word = diff > 0 ? 'ขาด' : (diff < 0 ? 'เกิน' : 'ตรง');
+    var hot = Math.abs(pct) > 3;
+    diffBox.style.display = 'block';
+    diffBox.style.background = hot ? '#fff4e5' : '#f2fbf6';
+    diffBox.style.color = hot ? '#a05a00' : '#0a6b45';
+    diffBox.innerHTML = 'ส่วนต่าง ' + diff.toFixed(2) + ' กก. (' + pct + '%) ' + word + (price > 0 ? (' · ร้านจ่าย ฿' + amt.toFixed(2)) : '') + (hot ? ' ⚠️ เกิน 3%' : '');
+  } else diffBox.style.display = 'none';
+  var ok = !!(t && bank > 0 && buyer > 0 && price > 0 && !over);
   var btn = document.getElementById('sellAddBtn');
   btn.disabled = !ok; btn.style.opacity = ok ? '1' : '.5'; btn.style.cursor = ok ? 'pointer' : 'not-allowed';
 }
 function sellAddItem() {
   var btn = document.getElementById('sellAddBtn'); if (btn.disabled) return;
-  var t = document.getElementById('sellWaste').value, pi = priceOf(t);
-  var unit = (pi && pi.unit) ? pi.unit : 'กก.', uw = pi ? (parseFloat(pi.unitWeight) || 0) : 0;
-  var unitBased = (unit !== 'กก.' && uw > 0);
-  var w = parseFloat(document.getElementById('sellWeight').value);
-  APP.saleCart.push({
-    wasteName: t, weight: w, sellPrice: parseFloat(document.getElementById('sellPrice').value),
-    qty: unitBased ? (parseFloat(document.getElementById('sellQty').value) || 0) : w, unit: unit, unitWeight: uw
-  });
+  var t = document.getElementById('sellWaste').value;
+  var bank = parseFloat(document.getElementById('sellBankWeight').value) || 0;
+  var buyer = parseFloat(document.getElementById('sellBuyerWeight').value) || 0;
+  var price = parseFloat(document.getElementById('sellPrice').value) || 0;
+  APP.saleCart.push({ wasteName: t, mode: APP.sellMode, bankWeight: bank, buyerWeight: buyer, sellPrice: price, weight: bank });
   document.getElementById('sellWaste').value = '';
-  document.getElementById('sellWeight').value = '';
+  document.getElementById('sellBankWeight').value = '';
+  document.getElementById('sellBuyerWeight').value = '';
   document.getElementById('sellPrice').value = '';
-  document.getElementById('sellQty').value = '';
-  _sellWeightTouched = false;   // [v1.4.1] เพิ่มเข้าตะกร้าแล้ว = เริ่มรายการใหม่
-  document.getElementById('sellQtyWrap').classList.add('hidden');
+  document.getElementById('sellDiffBox').style.display = 'none';
+  sellSetMode('lot');
   sellRenderTypes(); sellRenderCart(); sellValidate();
 }
+
 function sellRemoveItem(i) { APP.saleCart.splice(i, 1); sellRenderTypes(); sellRenderCart(); sellValidate(); }
 function sellSubmit(btn) {
   var cart = APP.saleCart || [];
@@ -2925,7 +3076,7 @@ function sellSubmit(btn) {
   showToast('กำลังบันทึก ' + cart.length + ' รายการ...', 'success');
   // [harden v1.4] ส่งทั้งบิลครั้งเดียว → backend บันทึกแบบ atomic (สำเร็จ/ล้มเหลวทั้งบิล) แทนวนทีละรายการ
   var items = cart.map(function(it) {
-    return { wasteName: it.wasteName, weight: it.weight, sellPrice: it.sellPrice, qty: it.qty };
+    return { wasteName: it.wasteName, mode: it.mode, bankWeight: it.bankWeight, buyerWeight: it.buyerWeight, sellPrice: it.sellPrice };
   });
   callServer('processMultiSale', { items: items, buyerId: buyerId, buyerName: buyerName, note: note }, function(r) {
     btn.disabled = false;
@@ -3003,6 +3154,7 @@ function loadDashboard() {
     var trend = r.data.monthlyTrend || [];
     var ghgCat = r.data.ghgByCategory || {};
     var mult = r.data.pointsMultiplier || 2;
+    var _showSales = (d.totalProfit != null);   // [hide-sales] สิทธิ์ดูข้อมูลการขาย/กำไร
 
     var ghgTotal = d.totalGhg || 0;
     var ghgTon = (ghgTotal/1000);
@@ -3020,7 +3172,8 @@ function loadDashboard() {
     h += '<div class="stat-card"><div class="stat-value">฿' + (d.totalBalance||0).toLocaleString() + '</div><div class="stat-label">ยอดคงเหลือ</div></div>';
     h += '<div class="stat-card"><div class="stat-value" style="color:var(--points)">' + (d.totalPointsBalance||0).toLocaleString() + '</div><div class="stat-label">แต้ม (x' + mult + ')</div></div>';
     h += '<div class="stat-card"><div class="stat-value">' + (d.totalStock||0).toLocaleString() + ' กก.</div><div class="stat-label">สต็อก</div></div>';
-    h += '<div class="stat-card"><div class="stat-value" style="color:var(--success)">฿' + (d.totalProfit||0).toLocaleString() + '</div><div class="stat-label">กำไร</div></div>';
+    h += '<div class="stat-card"><div class="stat-value" style="color:#e91e8c">' + (d.donationWeight||0).toLocaleString() + ' กก.</div><div class="stat-label">ขยะบริจาค' + (d.donationCount ? ' (' + d.donationCount + ')' : '') + '</div></div>';
+    if (_showSales) h += '<div class="stat-card"><div class="stat-value" style="color:var(--success)">฿' + (d.totalProfit||0).toLocaleString() + '</div><div class="stat-label">กำไร</div></div>';
     h += '</div>';
 
     h += '<div class="dash-g3">';
@@ -3029,10 +3182,12 @@ function loadDashboard() {
     h += '<div class="dash-fin"><span style="color:var(--text-light)">รายรับจากฝาก</span><span style="color:var(--success);font-weight:600">+฿' + (d.totalDeposit||0).toLocaleString() + '</span></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">จ่ายถอนเงิน</span><span style="color:var(--danger);font-weight:600">-฿' + (d.totalWithdraw||0).toLocaleString() + '</span></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">ยอดค้างจ่าย</span><span style="font-weight:600">฿' + (d.totalBalance||0).toLocaleString() + '</span></div>';
+    if (_showSales) {
     h += '<div style="border-top:2px solid var(--border);margin:4px 0"></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">รายได้จากขาย</span><span style="color:var(--success);font-weight:600">+฿' + (d.totalSales||0).toLocaleString() + '</span></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">ต้นทุนรับซื้อ</span><span style="color:var(--danger);font-weight:600">-฿' + (d.totalStockValue||0).toLocaleString() + '</span></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">กำไรสุทธิ</span><span style="color:var(--success);font-weight:700;font-size:15px">฿' + (d.totalProfit||0).toLocaleString() + '</span></div>';
+    }
     h += '</div>';
 
     h += '<div class="card"><div class="card-title">สต็อกวัสดุ</div>';
@@ -3091,7 +3246,7 @@ function loadDashboard() {
 
     h += '<div class="dash-g2">';
     h += '<div class="card"><div class="card-title">แนวโน้มรายเดือน</div>';
-    h += '<div style="font-size:11px;color:var(--text-light);margin-bottom:6px"><span style="display:inline-block;width:10px;height:10px;background:var(--success);border-radius:2px;margin-right:3px"></span>ฝาก <span style="display:inline-block;width:10px;height:10px;background:var(--danger);border-radius:2px;margin:0 3px 0 8px"></span>ถอน <span style="display:inline-block;width:10px;height:10px;background:var(--secondary);border-radius:2px;margin:0 3px 0 8px"></span>กำไร</div>';
+    h += '<div style="font-size:11px;color:var(--text-light);margin-bottom:6px"><span style="display:inline-block;width:10px;height:10px;background:var(--success);border-radius:2px;margin-right:3px"></span>ฝาก <span style="display:inline-block;width:10px;height:10px;background:var(--danger);border-radius:2px;margin:0 3px 0 8px"></span>ถอน' + (_showSales ? ' <span style="display:inline-block;width:10px;height:10px;background:var(--secondary);border-radius:2px;margin:0 3px 0 8px"></span>กำไร' : '') + '</div>';
     h += '<div style="position:relative;height:200px"><canvas id="trendCanvas"></canvas></div></div>';
     h += '<div class="card"><div class="card-title">สัดส่วนขยะที่รับ</div>';
     h += '<div style="position:relative;height:220px"><canvas id="catCanvas"></canvas></div></div>';
@@ -3117,11 +3272,12 @@ function loadDashboard() {
     var labels = trend.map(function(t){return t.label});
 
     if (document.getElementById('trendCanvas')) {
-      new Chart(document.getElementById('trendCanvas'), {type:'line', data:{labels:labels, datasets:[
+      var _tds = [
         {label:'ฝาก',data:trend.map(function(t){return t.deposit}),borderColor:'#4caf50',backgroundColor:'rgba(76,175,80,0.08)',fill:true,tension:0.3,pointRadius:3},
-        {label:'ถอน',data:trend.map(function(t){return t.withdraw}),borderColor:'#f44336',borderDash:[4,4],tension:0.3,pointRadius:3},
-        {label:'กำไร',data:trend.map(function(t){return t.profit}),borderColor:'#1a73e8',tension:0.3,pointRadius:3}
-      ]}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return v>=1000?(v/1000)+'k':v},font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
+        {label:'ถอน',data:trend.map(function(t){return t.withdraw}),borderColor:'#f44336',borderDash:[4,4],tension:0.3,pointRadius:3}
+      ];
+      if (_showSales) _tds.push({label:'กำไร',data:trend.map(function(t){return t.profit}),borderColor:'#1a73e8',tension:0.3,pointRadius:3});
+      new Chart(document.getElementById('trendCanvas'), {type:'line', data:{labels:labels, datasets:_tds}, options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{callback:function(v){return v>=1000?(v/1000)+'k':v},font:{size:10}},grid:{color:'rgba(0,0,0,0.05)'}},x:{grid:{display:false},ticks:{font:{size:10}}}}}});
     }
 
     if (document.getElementById('catCanvas') && cats.length > 0) {
@@ -3775,6 +3931,120 @@ function filterAuditLogs() {
 function refreshRegister() { callServer('clearCacheKeys',{keys:['zones_data']},function(){callServer('getZones',{},function(r){if(r&&r.success&&r.data)APP.zones=r.data;loadZones();showToast('โหลดใหม่แล้ว','success');});}); }
 function refreshBalance() { callServer('clearCacheKeys',{keys:['balance_map','members_data']},function(){document.getElementById('balanceDisplay').classList.add('hidden');showToast('โหลดใหม่แล้ว','success');}); }
 function refreshHistory() { callServer('clearCacheKeys',{keys:['balance_map','members_data']},function(){document.getElementById('historyDisplay').classList.add('hidden');showToast('โหลดใหม่แล้ว','success');}); }
+// ═══════════ [v1.6 donate] บริจาคขยะ ═══════════
+function initDonatePage() {
+  APP.donateCart = [];
+  APP.donateDonor = null;
+  var nt = document.getElementById('dnNote'); if (nt) nt.value = '';
+  var sr = document.getElementById('dnSearch'); if (sr) sr.value = '';
+  var w = document.getElementById('dnWeight'); if (w) w.value = '';
+  document.getElementById('dnSearchResults').innerHTML = '';
+  document.getElementById('dnSelectedMember').innerHTML = '';
+  fillDonateWasteOptions();
+  renderDonateCart();
+}
+
+function fillDonateWasteOptions() {
+  var sel = document.getElementById('dnWaste');
+  if (!sel) return;
+  var opts = '<option value="">— เลือกประเภทขยะ —</option>';
+  (APP.prices || []).forEach(function(p) {
+    opts += '<option value="' + esc(p.name) + '">' + esc(p.name) + ' (' + (p.price || 0) + ' ฿/' + esc(p.unit || 'กก.') + ')</option>';
+  });
+  sel.innerHTML = opts;
+}
+
+function donateSearchMember() {
+  var q = document.getElementById('dnSearch').value.trim();
+  var box = document.getElementById('dnSearchResults');
+  if (q.length < 1) { box.innerHTML = ''; return; }
+  callServer('searchMember', { query: q, browse: false }, function(r) {
+    if (!r.success || !r.data || !r.data.length) { box.innerHTML = '<div style="color:#999;padding:8px">ไม่พบสมาชิก</div>'; return; }
+    box.innerHTML = r.data.slice(0, 15).map(function(m) {
+      var nm = String(m.fullName || '').replace(/'/g, '');
+      return '<div class="list-item" style="cursor:pointer;padding:10px" onclick="selectDonateMember(\'' + esc(m.memberId) + '\',\'' + esc(nm) + '\',\'' + esc(m.classNo || '') + '\',\'' + esc(m.zone || '') + '\')">' +
+        '<div><div class="list-title">' + esc(m.fullName) + '</div><div class="list-subtitle">' + esc(m.classNo || '') + ' · ' + esc(m.zone || '') + '</div></div></div>';
+    }).join('');
+  });
+}
+
+function selectDonateMember(memberId, name, classNo, zone) {
+  APP.donateDonor = { memberId: memberId, fullName: name };
+  document.getElementById('dnSearchResults').innerHTML = '';
+  document.getElementById('dnSearch').value = '';
+  document.getElementById('dnSelectedMember').innerHTML =
+    '<div class="balance-card" style="padding:10px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center">' +
+    '<div><b>' + esc(name) + '</b><div style="font-size:12px;opacity:0.85">' + esc(classNo) + ' · ' + esc(zone) + '</div></div>' +
+    '<button type="button" onclick="clearDonateMember()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer">✕</button></div>';
+  renderDonateCart();
+}
+
+function clearDonateMember() {
+  APP.donateDonor = null;
+  document.getElementById('dnSelectedMember').innerHTML = '';
+  renderDonateCart();
+}
+
+function addDonateItem() {
+  var name = document.getElementById('dnWaste').value;
+  var w = parseFloat(document.getElementById('dnWeight').value);
+  if (!name) { showToast('เลือกประเภทขยะก่อน', 'error'); return; }
+  if (!(w > 0)) { showToast('ใส่น้ำหนัก/จำนวนให้ถูกต้อง', 'error'); return; }
+  var p = null;
+  for (var i = 0; i < APP.prices.length; i++) { if (APP.prices[i].name === name) { p = APP.prices[i]; break; } }
+  if (!p) { showToast('ไม่พบราคาของประเภทนี้', 'error'); return; }
+  APP.donateCart = APP.donateCart || [];
+  var found = null;
+  for (var j = 0; j < APP.donateCart.length; j++) { if (APP.donateCart[j].wasteName === name) { found = APP.donateCart[j]; break; } }
+  if (found) { found.weight = Math.round((found.weight + w) * 100) / 100; }
+  else { APP.donateCart.push({ wasteName: name, weight: w, price: (p.price || 0), unit: (p.unit || 'กก.') }); }
+  document.getElementById('dnWeight').value = '';
+  document.getElementById('dnWaste').value = '';
+  renderDonateCart();
+}
+
+function removeDonateItem(i) { APP.donateCart.splice(i, 1); renderDonateCart(); }
+
+function renderDonateCart() {
+  var box = document.getElementById('dnCartRows');
+  if (!box) return;
+  var cart = APP.donateCart || [];
+  var total = 0, totalW = 0;
+  if (!cart.length) {
+    box.innerHTML = '<div style="color:#999;padding:8px;text-align:center">ยังไม่มีรายการ</div>';
+  } else {
+    box.innerHTML = cart.map(function(it, i) {
+      var amt = Math.round(it.weight * it.price * 100) / 100;
+      total += amt; totalW += it.weight;
+      return '<div class="list-item" style="padding:8px 0;justify-content:space-between">' +
+        '<div><div class="list-title">' + esc(it.wasteName) + '</div><div class="list-subtitle">' + it.weight + ' ' + esc(it.unit) + ' × ' + it.price + ' ฿</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px"><b style="color:var(--primary)">' + amt.toLocaleString() + ' ฿</b>' +
+        '<button type="button" onclick="removeDonateItem(' + i + ')" style="background:none;border:none;color:#c62828;font-size:16px;cursor:pointer">✕</button></div></div>';
+    }).join('');
+  }
+  document.getElementById('dnTotal').textContent = '฿ ' + total.toLocaleString();
+  document.getElementById('dnWeightSum').textContent = (Math.round(totalW * 100) / 100) + ' กก.';
+  var ready = cart.length > 0 && APP.donateDonor && APP.donateDonor.memberId;
+  document.getElementById('dnSaveBtn').disabled = !ready;
+}
+
+function processDonationSubmit(btn) {
+  var cart = APP.donateCart || [];
+  if (!cart.length) return;
+  var memberId = (APP.donateDonor && APP.donateDonor.memberId) ? APP.donateDonor.memberId : '';
+  if (!memberId) { showToast('เลือกสมาชิกผู้บริจาคก่อน', 'error'); return; }
+  var items = cart.map(function(it) { return { wasteName: it.wasteName, weight: it.weight, qty: it.weight }; });
+  var payload = { memberId: memberId, items: items, note: document.getElementById('dnNote').value };
+  btn.disabled = true;
+  callServer('processDonation', payload, function(r) {
+    btn.disabled = false;
+    if (!r.success) { showToast(r.message || 'บันทึกไม่สำเร็จ', 'error'); return; }
+    var d = r.data;
+    showToast('บันทึกการบริจาคแล้ว · ' + d.totalWeight + ' กก. +' + (d.totalPoints || 0) + ' แต้ม', 'success');
+    initDonatePage();
+  });
+}
+
 function refreshDeposit() {
   callServer('clearCacheKeys', { keys: ['members_data', 'prices_map', 'deposit_stats'] }, function() {
     callServer('getInitialData', {}, function(r) {
@@ -3905,6 +4175,66 @@ function catImport(btn) {
   });
 }
 function refreshStock() { callServer('clearCacheKeys',{keys:['inventory_map']},function(){loadStock();}); }
+function loadWeightReport() {
+  document.getElementById('wrContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  callServer('getWeightDiscrepancyReport', {}, function(r) {
+    if (!r.success) { document.getElementById('wrContent').innerHTML = '<div style="color:#c62828">' + esc(r.message) + '</div>'; return; }
+    APP.wrData = r.data || { rows: [] };
+    var buyers = {}, types = {};
+    (APP.wrData.rows || []).forEach(function(x) { if (x.buyerId) buyers[x.buyerId] = x.buyerName; if (x.wasteType) types[x.wasteType] = 1; });
+    document.getElementById('wrBuyer').innerHTML = '<option value="">ทุกร้าน</option>' + Object.keys(buyers).map(function(k) { return '<option value="' + esc(k) + '">' + esc(buyers[k]) + '</option>'; }).join('');
+    document.getElementById('wrType').innerHTML = '<option value="">ทุกประเภท</option>' + Object.keys(types).map(function(k) { return '<option value="' + esc(k) + '">' + esc(k) + '</option>'; }).join('');
+    renderWeightReport();
+  });
+}
+function _wrFiltered() {
+  var rows = (APP.wrData && APP.wrData.rows) || [];
+  var fb = document.getElementById('wrBuyer').value, ft = document.getElementById('wrType').value;
+  var ff = document.getElementById('wrFrom').value, fto = document.getElementById('wrTo').value;
+  var from = ff ? new Date(ff + 'T00:00:00').getTime() : 0;
+  var to = fto ? new Date(fto + 'T23:59:59').getTime() : 0;
+  return rows.filter(function(x) {
+    if (fb && x.buyerId !== fb) return false;
+    if (ft && x.wasteType !== ft) return false;
+    if (from && x.ts && x.ts < from) return false;
+    if (to && x.ts && x.ts > to) return false;
+    return true;
+  });
+}
+function renderWeightReport() {
+  if (!APP.wrData) return;
+  var rows = _wrFiltered();
+  var box = document.getElementById('wrContent');
+  if (!rows.length) { box.innerHTML = '<div style="text-align:center;color:#999;padding:20px">ยังไม่มีข้อมูลการขายแบบ 2 น้ำหนัก</div>'; return; }
+  var tBank = 0, tBuyer = 0, tDiff = 0, tLost = 0, sumPct = 0, byBuyer = {};
+  rows.forEach(function(x) {
+    tBank += x.bankWeight; tBuyer += x.buyerWeight; tDiff += x.diff; tLost += x.lostValue; sumPct += x.pct;
+    if (!byBuyer[x.buyerId]) byBuyer[x.buyerId] = { name: x.buyerName, bank: 0, diff: 0 };
+    byBuyer[x.buyerId].bank += x.bankWeight; byBuyer[x.buyerId].diff += x.diff;
+  });
+  var avgPct = rows.length ? Math.round(sumPct / rows.length * 10) / 10 : 0;
+  var head = '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:#eef4f1;color:#5f7a6e"><th style="padding:6px 3px;text-align:left">วันที่/ประเภท</th><th style="padding:6px 2px">โหมด</th><th style="padding:6px 2px">เรา</th><th style="padding:6px 2px">ร้าน</th><th style="padding:6px 2px">ต่าง</th><th style="padding:6px 2px">%</th></tr>';
+  var body = rows.map(function(x) {
+    var mtag = (x.mode === 'ยกลอต') ? '<span style="font-size:9px;background:#e7f0ff;color:#2b6fd6;padding:1px 5px;border-radius:6px">ยกลอต</span>' : '<span style="font-size:9px;background:#fef0e7;color:#c47a2b;padding:1px 5px;border-radius:6px">บางส่วน</span>';
+    var c = Math.abs(x.pct) > 3 ? '#c62828' : '#555';
+    return '<tr style="border-bottom:1px solid #f0f3f2"><td style="padding:6px 3px;text-align:left"><b>' + esc(x.wasteType) + '</b><br><span style="font-size:10px;color:#999">' + esc(x.date) + ' · ' + esc(x.buyerName) + '</span></td><td style="text-align:center">' + mtag + '</td><td style="text-align:center">' + x.bankWeight.toFixed(1) + '</td><td style="text-align:center">' + x.buyerWeight.toFixed(1) + '</td><td style="text-align:center;color:' + c + ';font-weight:700">' + x.diff.toFixed(1) + '</td><td style="text-align:center;color:' + c + '">' + x.pct.toFixed(1) + '</td></tr>';
+  }).join('');
+  var sumHtml = '<div style="background:#f2fbf6;border:1px solid #cdeede;border-radius:9px;padding:10px;margin-top:10px;font-size:12px;color:#0a3d2c">รวมส่วนต่าง: <b>' + (Math.round(tDiff * 100) / 100) + ' กก.</b> · เฉลี่ย <b>' + avgPct + '%</b><br>เรา ' + (Math.round(tBank * 10) / 10) + ' / ร้าน ' + (Math.round(tBuyer * 10) / 10) + ' กก. · มูลค่าที่หาย <b>฿' + (Math.round(tLost * 100) / 100).toLocaleString() + '</b> (' + rows.length + ' รายการ)</div>';
+  var warns = Object.keys(byBuyer).map(function(k) { var b = byBuyer[k]; return { name: b.name, p: b.bank > 0 ? Math.round(b.diff / b.bank * 1000) / 10 : 0 }; }).filter(function(b) { return Math.abs(b.p) > 3; });
+  var warnHtml = warns.length ? '<div style="background:#fff4e5;border:1px solid #ffd9a0;border-radius:9px;padding:10px;margin-top:8px;font-size:11.5px;color:#a05a00">⚠️ ร้านที่ส่วนต่างเกิน 3%:<br>' + warns.map(function(b) { return '<b>' + esc(b.name) + '</b> เฉลี่ย ' + b.p + '%'; }).join('<br>') + '<br>→ ควรตรวจตาชั่ง/ความชื้น/เทียบใบชั่ง</div>' : '';
+  box.innerHTML = head + body + '</table>' + sumHtml + warnHtml;
+}
+function exportWeightReport() {
+  var rows = _wrFiltered();
+  if (!rows.length) { showToast('ไม่มีข้อมูลให้ส่งออก', 'error'); return; }
+  var csv = 'วันที่,ประเภท,โหมด,ร้าน,น้ำหนักเรา,น้ำหนักร้าน,ส่วนต่าง,%,มูลค่าที่หาย\n';
+  csv += rows.map(function(x) { return [x.date, x.wasteType, x.mode, x.buyerName, x.bankWeight, x.buyerWeight, x.diff, x.pct, x.lostValue].map(function(v) { return '"' + String(v).replace(/"/g, '""') + '"'; }).join(','); }).join('\n');
+  var blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a'); a.href = url; a.download = 'weight_report.csv'; document.body.appendChild(a); a.click();
+  setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+
 function refreshSell() { callServer('clearCacheKeys',{keys:['inventory_map']},function(){loadSellData();}); }
 function refreshBuyers() { loadBuyers(); }
 function refreshDashboard() { callServer('clearCacheKeys',{keys:['inventory_map','balance_map','monthly_trend']},function(){loadDashboard();}); }
