@@ -582,7 +582,7 @@
       <div class="main">
         <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
         <div class="card">
-          <div class="card-title" style="justify-content:space-between"><span>🛒 ขายวัสดุให้ร้านรับซื้อ</span><button onclick="refreshSell()" class="btn-refresh">🔄</button></div>
+          <div class="card-title" style="justify-content:space-between"><span>🛒 ขายวัสดุให้ร้านรับซื้อ</span><span style="display:flex;gap:6px"><button id="sellWrBtn" onclick="showPage('weightReportPage')" class="btn-refresh" style="display:none;width:auto;padding:2px 10px;font-size:13px">⚖️ ส่วนต่าง</button><button onclick="refreshSell()" class="btn-refresh">🔄</button></span></div>
           <div id="sellForm"></div>
         </div>
       </div>
@@ -591,10 +591,11 @@
     <!-- ═══════════ รายงานส่วนต่างน้ำหนัก ═══════════ -->
     <div id="weightReportPage" class="page hidden">
       <div class="main">
-        <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
+        <button class="back-btn" onclick="showPage('sellPage')">← หน้าขาย</button>
         <div class="card">
           <div class="card-title" style="justify-content:space-between"><span>⚖️ รายงานส่วนต่างน้ำหนัก</span><button onclick="loadWeightReport()" class="btn-refresh">🔄</button></div>
           <div style="font-size:12px;color:var(--text-light);margin-bottom:10px">ตาชั่งเรา vs ร้านรับซื้อ · ตัดสต็อกตามน้ำหนักเรา</div>
+          <div class="form-group"><label class="form-label">ช่วงข้อมูล</label><select id="wrRange" class="form-select" onchange="loadWeightReport()"><option value="90" selected>90 วันล่าสุด</option><option value="180">180 วันล่าสุด</option><option value="365">1 ปีล่าสุด</option><option value="all">ทั้งหมด</option></select></div>
           <div class="form-row" style="gap:6px">
             <div class="form-group"><label class="form-label">ร้านรับซื้อ</label><select id="wrBuyer" class="form-select" onchange="renderWeightReport()"><option value="">ทุกร้าน</option></select></div>
             <div class="form-group"><label class="form-label">ประเภทขยะ</label><select id="wrType" class="form-select" onchange="renderWeightReport()"><option value="">ทุกประเภท</option></select></div>
@@ -605,7 +606,7 @@
             <input type="date" id="wrTo" onchange="renderWeightReport()" style="flex:1;height:40px;border:1px solid var(--border);border-radius:10px;padding:0 8px;font-family:inherit;box-sizing:border-box">
           </div>
           <div id="wrContent" class="loading"><div class="spinner"></div></div>
-          <button class="btn btn-outline" onclick="exportWeightReport()" style="margin-top:12px">📤 ส่งออก CSV</button>
+          <div style="display:flex;gap:8px;margin-top:12px"><button class="btn btn-outline" onclick="exportWeightReport()" style="flex:1;margin:0">📤 CSV</button><button class="btn btn-outline" onclick="exportWeightReportPdf()" style="flex:1;margin:0">📄 PDF</button></div>
         </div>
       </div>
     </div>
@@ -765,9 +766,28 @@
         <div class="card">
           <div class="card-title" style="justify-content:space-between"><span>🛡️ จัดการสิทธิ์</span><button onclick="loadRolePerms()" class="btn-refresh">🔄</button></div>
           <div style="background:#fff8e1;color:#8a6d00;font-size:12px;padding:8px 12px;border-radius:9px;margin-bottom:10px">🔒 Admin เต็มสิทธิ์เสมอ · แตะจุดสีหัวคอลัมน์เพื่อเลือกทั้งบทบาท · จัดการผู้ใช้/สิทธิ์ = Admin เท่านั้น</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;background:#fff0f7;border:1px solid #ffcfe6;border-radius:10px;padding:10px 12px;margin-bottom:10px">
-            <div><b style="color:#c0186f">❤️ เปิดรับบริจาคขยะ</b><div style="font-size:11px;color:#a06">แสดงเมนู "บริจาคขยะ" ให้ผู้มีสิทธิ์ · ไม่ใช่ทุกที่เปิดรับ</div></div>
-            <button type="button" id="donateToggleBtn" onclick="toggleDonateEnabled()" style="padding:8px 18px;border-radius:20px;border:none;font-weight:700;cursor:pointer;min-width:80px">—</button>
+          <div style="background:#fff0f7;border:1px solid #ffcfe6;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <b style="color:#c0186f;white-space:nowrap">❤️ รับบริจาคขยะ</b>
+              <select id="donateModeSel" onchange="setDonateMode(this.value)" style="flex:1;max-width:180px;height:38px;border:1.5px solid #e6a9cd;border-radius:9px;padding:0 8px;font-family:inherit;font-size:14px;font-weight:700;color:#c0186f;background:#fff">
+                <option value="off">ปิด</option>
+                <option value="partial">บางส่วน</option>
+                <option value="all">เลือกได้</option>
+                <option value="donate_all">บริจาคทั้งหมด</option>
+              </select>
+            </div>
+            <div id="donateModeDesc" style="font-size:11.5px;color:#a06;margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;line-height:1.5"></div>
+          </div>
+          <div style="background:#fff8e6;border:1px solid #ffe3a0;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+              <b style="color:#8a6d1a;white-space:nowrap">⚖️ เกณฑ์เตือนส่วนต่าง</b>
+              <span style="display:flex;align-items:center;gap:6px">
+                <input type="text" inputmode="decimal" id="diffThInput" style="width:64px;height:36px;border:1.5px solid #ffd9a0;border-radius:9px;text-align:center;font-weight:700;color:#8a6d1a;font-family:inherit;font-size:14px">
+                <span style="color:#8a6d1a;font-weight:700">%</span>
+                <button type="button" onclick="saveDiffThreshold()" class="btn btn-primary" style="width:auto;padding:8px 14px;margin:0;font-size:13px">บันทึก</button>
+              </span>
+            </div>
+            <div style="font-size:11.5px;color:#a58a2d;margin-top:6px">ใช้เตือนในหน้าขาย + รายงานส่วนต่างน้ำหนัก เมื่อส่วนต่างเกินเกณฑ์นี้ (ค่าเริ่มต้น 3%)</div>
           </div>
           <div id="permLegend" class="perm-legend"></div>
           <div id="permTableWrap"><div class="loading"><div class="spinner"></div></div></div>
@@ -1591,6 +1611,7 @@ function getRoleLabel(role) {
 function buildMenu() {
   callServer('getMyMenu', {}, function(r) {
     var items = (r && r.success && r.data) ? r.data.slice() : [];
+    APP.menuPages = {}; items.forEach(function(it) { if (it.page) APP.menuPages[it.page] = 1; });   // [v2.1] ใช้เช็คสิทธิ์ปุ่มลัด
     items.push({ icon:'🔐', label:'เปลี่ยนรหัสผ่าน', page:'_changePwd' });
     items.push({ icon:'🚪', label:'ออกจากระบบ',     page:'_logout' });
 
@@ -1662,21 +1683,42 @@ function loadMyHistory() {
 var _permData = null;
 var _roleColors = { admin:'#c62828', manager:'#7f77dd', operator:'#2e7d32', viewer:'#1565c0', member:'#ba7517' };
 
-function _renderDonateToggle() {
-  var btn = document.getElementById('donateToggleBtn');
-  if (!btn) return;
-  var on = !!(window.PROFILE && PROFILE.enableDonate);
-  btn.textContent = on ? 'เปิดอยู่' : 'ปิดอยู่';
-  btn.style.background = on ? '#06c755' : '#e0e0e0';
-  btn.style.color = on ? '#fff' : '#666';
+function _wrTh() { var t = parseFloat(window.PROFILE && PROFILE.diffThreshold); return (t > 0) ? t : 3; }   // [v2.1] เกณฑ์เตือนส่วนต่าง (%)
+function _curDonateMode() {
+  if (window.PROFILE && PROFILE.donateMode) return PROFILE.donateMode;
+  return (window.PROFILE && PROFILE.enableDonate) ? 'all' : 'off';
 }
-function toggleDonateEnabled() {
-  var on = !(window.PROFILE && PROFILE.enableDonate);
-  callServer('setDonateEnabled', { enabled: on }, function(r) {
-    if (!r.success) { showToast(r.message || 'บันทึกไม่สำเร็จ', 'error'); return; }
-    if (typeof PROFILE !== 'undefined') PROFILE.enableDonate = r.data.enableDonate;
+function _donateModeLabel(m) {
+  return m === 'off' ? 'ปิด' : m === 'partial' ? 'บางส่วน' : m === 'donate_all' ? 'บริจาคทั้งหมด' : 'เลือกได้';
+}
+function _donateModeDesc(m) {
+  return m === 'off' ? 'ไม่รับบริจาค — สมาชิกฝากได้เงิน/แต้มอย่างเดียว'
+    : m === 'partial' ? 'แยกตามประเภท — ของที่ตั้ง "ราคา" ไว้ฝาก · ของที่ตั้ง "บริจาค" ไว้บริจาค'
+    : m === 'donate_all' ? 'บริจาคทั้งหมด — ทุกประเภทบังคับเป็นบริจาค ไม่จ่ายเงินทั้งร้าน'
+    : 'เลือกได้ — ทุกประเภทมีปุ่มให้สมาชิกเลือก ฝาก(ได้เงิน) หรือ บริจาค';
+}
+function _renderDonateToggle() {
+  var mode = _curDonateMode();
+  var sel = document.getElementById('donateModeSel'); if (sel) sel.value = mode;
+  var d = document.getElementById('donateModeDesc'); if (d) d.textContent = _donateModeDesc(mode);
+  var ti = document.getElementById('diffThInput'); if (ti) ti.value = _wrTh();   // [v2.1]
+}
+function saveDiffThreshold() {   // [v2.1] admin ตั้งเกณฑ์เตือนส่วนต่าง
+  var v = parseFloat((document.getElementById('diffThInput') || {}).value);
+  if (isNaN(v) || v < 0.1 || v > 50) { showToast('เกณฑ์ต้องอยู่ระหว่าง 0.1–50%', 'error'); return; }
+  callServer('setWeightDiffThreshold', { threshold: v }, function(r) {
+    if (!r.success) { showToast(r.message || 'บันทึกไม่สำเร็จ', 'error'); var ti = document.getElementById('diffThInput'); if (ti) ti.value = _wrTh(); return; }
+    if (typeof PROFILE !== 'undefined') PROFILE.diffThreshold = r.data.threshold;
+    showToast('ตั้งเกณฑ์เตือนส่วนต่าง ' + r.data.threshold + '%', 'success');
+  });
+}
+function setDonateMode(mode) {
+  callServer('setDonateMode', { mode: mode }, function(r) {
+    if (!r.success) { showToast(r.message || 'บันทึกไม่สำเร็จ', 'error'); _renderDonateToggle(); return; }   // [fix v2.0.1] คืนค่า dropdown เมื่อบันทึกไม่สำเร็จ
+    var m = r.data.donateMode;
+    if (typeof PROFILE !== 'undefined') { PROFILE.donateMode = m; PROFILE.enableDonate = (m !== 'off'); }
     _renderDonateToggle();
-    showToast(r.data.enableDonate ? 'เปิดรับบริจาคขยะแล้ว · เมนูบริจาคจะแสดง' : 'ปิดรับบริจาคขยะแล้ว', 'success');
+    showToast('ตั้งโหมดบริจาค: ' + _donateModeLabel(m), 'success');
     if (typeof buildMenu === 'function') buildMenu();
   });
 }
@@ -2469,18 +2511,23 @@ function renderDepCatalog() {
 
   var g = document.getElementById('depGrid');
   if (!list.length) { g.innerHTML = '<div class="dep-empty">ไม่พบประเภทขยะที่ค้นหา</div>'; return; }
+  var dmode = _curDonateMode();
   g.innerHTML = list.map(function(p) {
     var inCart = null;
     for (var i = 0; i < APP.depositCart.length; i++) { if (APP.depositCart[i].code === p.code) { inCart = APP.depositCart[i]; break; } }
     var hasPrice = (parseFloat(p.price) || 0) > 0;
+    var isDon = !!p.donateOnly;   // [v1.8] บริจาคเท่านั้น
+    var forceDon = isDon || (dmode === 'donate_all');   // [v2.0] บริจาคทั้งหมด
     var unit = String(p.unit || 'กก.');
-    var priceHTML = hasPrice
-      ? '<div class="dep-pr">' + p.price + '<span> ฿/' + esc(unit) + '</span></div>'
-      : '<div class="dep-pr unset">ยังไม่ตั้งราคา</div>';
+    var priceHTML = forceDon
+      ? '<div class="dep-pr" style="color:#c0186f;font-weight:700">❤️ บริจาค</div>'
+      : (hasPrice
+        ? '<div class="dep-pr">' + p.price + '<span> ฿/' + esc(unit) + '</span></div>'
+        : '<div class="dep-pr unset">ยังไม่ตั้งราคา</div>');
     var badge = inCart ? '<div class="dep-badge">' + esc(depItemQtyLabel(inCart)) + '</div>' : '';
     var cnt = stats[p.name] || 0;
     var hot = (cnt > 0 && cnt === maxCount && !q && !APP.depFilter) ? '<div class="dep-hot">ใช้บ่อย</div>' : '';
-    return '<div class="dep-card ' + (inCart ? 'picked' : '') + (hasPrice ? '' : ' noprice') + '" onclick="openDepKeypad(\'' + esc(p.code) + '\')">' +
+    return '<div class="dep-card ' + (inCart ? 'picked' : '') + ((hasPrice || forceDon) ? '' : ' noprice') + '" onclick="openDepKeypad(\'' + esc(p.code) + '\')">' +
       badge + hot +
       depThumb(p) +
       '<div class="dep-nm">' + esc(p.name) + '</div>' +
@@ -2492,11 +2539,18 @@ function renderDepCatalog() {
 function openDepKeypad(code) {
   var p = depPriceByCode(code);
   if (!p) return;
-  if ((parseFloat(p.price) || 0) <= 0) { showToast('ยังไม่ได้ตั้งราคา — นำเข้าข้อมูลเพื่อบันทึกราคารับซื้อก่อน', 'error'); return; }
+  var _dm = _curDonateMode();
+  var isDon = !!p.donateOnly;                        // [v1.8] รายการบริจาคเท่านั้น
+  var forceDon = isDon || (_dm === 'donate_all');    // [v2.0] บริจาคทั้งหมด = บังคับบริจาคทุกรายการ
+  if (forceDon) {
+    if (!(window.PROFILE && PROFILE.enableDonate)) { showToast('รายการนี้เป็นบริจาค — ต้องเปิดรับบริจาคก่อน (หน้าจัดการสิทธิ์)', 'error'); return; }
+  } else if ((parseFloat(p.price) || 0) <= 0) {
+    showToast('ยังไม่ได้ตั้งราคา — นำเข้าข้อมูลเพื่อบันทึกราคารับซื้อก่อน', 'error'); return;
+  }
   APP.depEdit = p;
   var inCart = null;
   for (var j = 0; j < APP.depositCart.length; j++) { if (APP.depositCart[j].code === code) { inCart = APP.depositCart[j]; break; } }
-  APP.depKind = (inCart && inCart.kind) ? inCart.kind : 'deposit';   // [v1.6 donate]
+  APP.depKind = forceDon ? 'donate' : ((inCart && inCart.kind) ? inCart.kind : 'deposit');   // [v1.6 / v1.8 / v2.0]
   var unit = String(p.unit || 'กก.'), uw = parseFloat(p.unitWeight) || 0;
   APP.depUnitBased = (unit !== 'กก.' && uw > 0);
   APP.depUnit = unit; APP.depUW = uw;
@@ -2523,7 +2577,17 @@ function closeDepSheet() {
 function renderDepKindToggle() {
   var row = document.getElementById('depKindRow');
   if (!row) return;
-  if (!(window.PROFILE && PROFILE.enableDonate)) { row.style.display = 'none'; row.innerHTML = ''; return; }
+  var pEdit = APP.depEdit;
+  var mode = _curDonateMode();
+  // [v1.8/v2.0] ล็อกเป็นบริจาค: รายการบริจาคเท่านั้น หรือ โหมดบริจาคทั้งหมด
+  if ((pEdit && pEdit.donateOnly) || mode === 'donate_all') {
+    row.style.display = 'flex'; row.style.gap = '8px'; row.style.margin = '4px 0 10px';
+    var _lbl = (pEdit && pEdit.donateOnly) ? '❤️ บริจาคเท่านั้น' : '❤️ บริจาคทั้งหมด';
+    row.innerHTML = '<div style="flex:1;padding:9px;border-radius:9px;font-weight:600;text-align:center;border:2px solid #e91e8c;background:#e91e8c;color:#fff">' + _lbl + '</div>';
+    return;
+  }
+  // [v1.9] รายการปกติ: โชว์ปุ่มสลับ ฝาก/บริจาค เฉพาะโหมด "เลือกได้" (all) (บางส่วน = ฝากอย่างเดียว)
+  if (mode !== 'all') { row.style.display = 'none'; row.innerHTML = ''; return; }
   var k = APP.depKind || 'deposit';
   row.style.display = 'flex';
   row.style.gap = '8px';
@@ -2800,30 +2864,50 @@ function loadPricesForUpdate() {
     r.data.forEach(function(p, idx) {
       if (p.category !== currentCat) { currentCat = p.category; html += '<div class="category-header">' + esc(p.category) + '</div>'; }
       var unit = p.unit || 'กก.';
+      var isDon = !!p.donateOnly;
       var uwField = (unit !== 'กก.')
         ? '<input type="text" inputmode="decimal" class="form-input price-uw-input" data-name="' + esc(p.name) + '" value="' + (p.unitWeight || '') + '" placeholder="กก./' + esc(unit) + '" title="น้ำหนัก (กก.) ต่อ 1 ' + esc(unit) + '" style="width:62px;padding:8px"><span style="font-size:11px;color:#999">กก./' + esc(unit) + '</span>'
         : '';
-      html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap">' +
-        '<span style="flex:1;min-width:90px;font-size:13px">' + esc(p.name) + '</span>' +
-        '<input type="text" inputmode="decimal" class="form-input price-edit-input" data-name="' + esc(p.name) + '" value="' + p.price + '" style="width:72px;padding:8px">' +
-        '' +
-        '<span style="font-size:12px;color:#999">฿/' + esc(unit) + '</span>' + uwField + '</div>';
+      var toggle = '<div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden">' +
+        '<span id="pmP_' + idx + '" onclick="setPriceMode(' + idx + ',\'price\')" style="font-size:10.5px;padding:5px 9px;font-weight:700;cursor:pointer;' + (isDon ? 'color:#888' : 'background:#9C27B0;color:#fff') + '">ราคา</span>' +
+        '<span id="pmD_' + idx + '" onclick="setPriceMode(' + idx + ',\'donate\')" style="font-size:10.5px;padding:5px 9px;font-weight:700;cursor:pointer;border-left:1.5px solid #e0e0e0;' + (isDon ? 'background:#e91e8c;color:#fff' : 'color:#888') + '">บริจาค</span>' +
+        '</div>';
+      html += '<div id="prow_' + idx + '" data-name="' + esc(p.name) + '" data-donate="' + (isDon ? '1' : '0') + '" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap">' +
+        '<span style="flex:1;min-width:80px;font-size:13px">' + esc(p.name) + '</span>' + toggle +
+        '<span id="pPrice_' + idx + '" style="display:' + (isDon ? 'none' : 'inline-flex') + ';align-items:center;gap:6px">' +
+          '<input type="text" inputmode="decimal" class="form-input price-edit-input" data-name="' + esc(p.name) + '" value="' + p.price + '" style="width:72px;padding:8px">' +
+          '<span style="font-size:12px;color:#999">฿/' + esc(unit) + '</span>' + uwField +
+        '</span>' +
+        '<span id="pDon_' + idx + '" style="display:' + (isDon ? 'inline-flex' : 'none') + ';font-size:11px;color:#c0186f;background:#fdeef6;border:1px solid #f6cfe3;border-radius:8px;padding:6px 9px;font-weight:700">บริจาคเท่านั้น</span>' +
+        '</div>';
     });
     document.getElementById('updatePriceList').innerHTML = html;
     document.getElementById('savePricesBtn').classList.remove('hidden');
   });
 }
 
+function setPriceMode(idx, mode) {
+  var row = document.getElementById('prow_' + idx); if (!row) return;
+  var isDon = (mode === 'donate');
+  row.setAttribute('data-donate', isDon ? '1' : '0');
+  document.getElementById('pPrice_' + idx).style.display = isDon ? 'none' : 'inline-flex';
+  document.getElementById('pDon_' + idx).style.display = isDon ? 'inline-flex' : 'none';
+  var P = document.getElementById('pmP_' + idx), D = document.getElementById('pmD_' + idx);
+  P.style.cssText = 'font-size:10.5px;padding:5px 9px;font-weight:700;cursor:pointer;' + (isDon ? 'color:#888' : 'background:#9C27B0;color:#fff');
+  D.style.cssText = 'font-size:10.5px;padding:5px 9px;font-weight:700;cursor:pointer;border-left:1.5px solid #e0e0e0;' + (isDon ? 'background:#e91e8c;color:#fff' : 'color:#888');
+}
 function saveMultiplePrices(btn) {
   var uwMap = {};
   document.querySelectorAll('.price-uw-input').forEach(function(u) {
     if (u.value !== '') uwMap[u.getAttribute('data-name')] = parseFloat(u.value) || 0;
   });
+  var donMap = {};
+  document.querySelectorAll('[data-donate]').forEach(function(row) { donMap[row.getAttribute('data-name')] = row.getAttribute('data-donate') === '1'; });
   var inputs = document.querySelectorAll('.price-edit-input');
   var updates = [];
   inputs.forEach(function(inp) {
     var name = inp.getAttribute('data-name');
-    var u = { wasteName: name, price: parseFloat(inp.value) || 0 };
+    var u = { wasteName: name, price: parseFloat(inp.value) || 0, donateOnly: !!donMap[name] };
     if (uwMap[name] !== undefined) u.unitWeight = uwMap[name];
     updates.push(u);
   });
@@ -2916,6 +3000,7 @@ function loadSellData() {
       r1.data.forEach(function(s) { APP.saleStockMap[s.wasteType] = s.totalWeight; });
       APP.saleCart = [];
       APP.sellMode = 'lot';
+      var _wrB = document.getElementById('sellWrBtn'); if (_wrB) _wrB.style.display = (APP.menuPages && APP.menuPages['weightReportPage']) ? '' : 'none';   // [v2.1]
       var buyerOptions = r2.data.map(function(b) { return '<option value="' + esc(b.id) + '" data-name="' + esc(b.name) + '">' + esc(b.name) + '</option>'; }).join('');
       document.getElementById('sellForm').innerHTML =
         '<div style="font-weight:700;margin-bottom:8px">เพิ่มรายการขาย</div>' +
@@ -2925,6 +3010,7 @@ function loadSellData() {
         '<div class="form-row"><div class="form-group"><label class="form-label">น้ำหนักร้านชั่ง (จ่ายเงิน)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellBuyerWeight" class="form-input" oninput="sellValidate()"></div></div>' +
         '<div class="form-group"><label class="form-label">ราคาขาย/กก. (พิมพ์เอง)</label><div style="position:relative"><input type="text" inputmode="decimal" id="sellPrice" class="form-input" oninput="sellValidate()"></div></div></div>' +
         '<div id="sellDiffBox" style="display:none;font-size:13px;padding:8px 10px;border-radius:9px;margin-bottom:10px"></div>' +
+        '<div id="sellReasonRow" style="display:none;margin-bottom:10px"><label class="form-label">สาเหตุส่วนต่าง (เกินเกณฑ์)</label><select id="sellDiffReason" class="form-select"><option value="">— ไม่ระบุ —</option><option>ความชื้น</option><option>ตกหล่น/ขนส่ง</option><option>ตาชั่งต่างกัน</option><option>อื่น ๆ</option></select></div>' +
         '<div id="sellWarn" class="hidden" style="font-size:13px;color:#a32d2d;background:#fdecec;border-radius:9px;padding:8px 10px;margin-bottom:10px"></div>' +
         '<button id="sellAddBtn" class="btn btn-primary" onclick="sellAddItem()" style="margin-bottom:14px">➕ เพิ่มรายการ</button>' +
         '<div style="border-top:1px solid #eee;padding-top:12px"><div style="font-weight:700;margin-bottom:6px">รายการขาย <span id="sellCartCount" style="color:#888;font-weight:400;font-size:13px"></span></div>' +
@@ -2952,7 +3038,7 @@ function sellRenderTypes() {
 }
 // [UNIT] หา price object (unit/unitWeight) ของประเภทขยะ
 // [v1.4.1] กรองอักขระช่องตัวเลข (ทุกช่อง inputmode numeric/decimal) — อนุญาตเฉพาะตัวเลข (+ จุดเดียวถ้า decimal)
-//   capture phase → กรองก่อนที่ oninput ของช่องจะทำงาน (sellValidate/onSellQty เห็นค่าที่สะอาดแล้ว)
+//   capture phase → กรองก่อนที่ oninput ของช่องจะทำงาน (sellValidate ฯลฯ เห็นค่าที่สะอาดแล้ว)
 function _sanitizeNumStr(v, allowDot) {
   if (!allowDot) return v.replace(/[^0-9]/g, '');
   v = v.replace(/[^0-9.]/g, '');
@@ -3009,7 +3095,7 @@ function sellRenderCart() {
       var amt = Math.round(it.buyerWeight * it.sellPrice * 100) / 100;
       var diff = Math.round((it.bankWeight - it.buyerWeight) * 100) / 100;
       var modeLabel = (it.mode === 'lot') ? 'ยกลอต' : 'บางส่วน';
-      var detail = 'เรา ' + it.bankWeight.toFixed(2) + ' · ร้าน ' + it.buyerWeight.toFixed(2) + ' กก. × ฿' + it.sellPrice + (Math.abs(diff) > 0.001 ? (' · ต่าง ' + diff.toFixed(2)) : '');
+      var detail = 'เรา ' + it.bankWeight.toFixed(2) + ' · ร้าน ' + it.buyerWeight.toFixed(2) + ' กก. × ฿' + it.sellPrice + (Math.abs(diff) > 0.001 ? (' · ต่าง ' + diff.toFixed(2)) : '') + (it.reason ? ' · ' + esc(it.reason) : '');
       return '<div style="display:flex;align-items:center;gap:8px;padding:9px 0;border-top:1px solid #f1f1f1"><div style="flex:1"><div style="font-weight:700;font-size:14px">' + esc(it.wasteName) + ' <span style="font-size:11px;font-weight:400;color:#888">' + modeLabel + '</span></div><div style="font-size:12px;color:#888">' + detail + '</div></div>' +
         '<div style="font-weight:700;color:#0f6e56;font-size:14px">฿' + amt.toFixed(2) + '</div>' +
         '<button onclick="sellRemoveItem(' + i + ')" class="btn-refresh" style="color:#f44336;width:auto;padding:2px 8px" aria-label="ลบ">🗑</button></div>';
@@ -3037,12 +3123,16 @@ function sellValidate() {
     var pct = bank > 0 ? Math.round(diff / bank * 1000) / 10 : 0;
     var amt = Math.round(buyer * price * 100) / 100;
     var word = diff > 0 ? 'ขาด' : (diff < 0 ? 'เกิน' : 'ตรง');
-    var hot = Math.abs(pct) > 3;
+    var hot = Math.abs(pct) > _wrTh();
     diffBox.style.display = 'block';
     diffBox.style.background = hot ? '#fff4e5' : '#f2fbf6';
     diffBox.style.color = hot ? '#a05a00' : '#0a6b45';
-    diffBox.innerHTML = 'ส่วนต่าง ' + diff.toFixed(2) + ' กก. (' + pct + '%) ' + word + (price > 0 ? (' · ร้านจ่าย ฿' + amt.toFixed(2)) : '') + (hot ? ' ⚠️ เกิน 3%' : '');
-  } else diffBox.style.display = 'none';
+    diffBox.innerHTML = 'ส่วนต่าง ' + diff.toFixed(2) + ' กก. (' + pct + '%) ' + word + (price > 0 ? (' · ร้านจ่าย ฿' + amt.toFixed(2)) : '') + (hot ? ' ⚠️ เกิน ' + _wrTh() + '%' : '');
+    var _rr = document.getElementById('sellReasonRow'); if (_rr) _rr.style.display = hot ? 'block' : 'none';   // [v2.1] เกินเกณฑ์ → ถามสาเหตุ
+  } else {
+    diffBox.style.display = 'none';
+    var _rr2 = document.getElementById('sellReasonRow'); if (_rr2) _rr2.style.display = 'none';
+  }
   var ok = !!(t && bank > 0 && buyer > 0 && price > 0 && !over);
   var btn = document.getElementById('sellAddBtn');
   btn.disabled = !ok; btn.style.opacity = ok ? '1' : '.5'; btn.style.cursor = ok ? 'pointer' : 'not-allowed';
@@ -3053,7 +3143,10 @@ function sellAddItem() {
   var bank = parseFloat(document.getElementById('sellBankWeight').value) || 0;
   var buyer = parseFloat(document.getElementById('sellBuyerWeight').value) || 0;
   var price = parseFloat(document.getElementById('sellPrice').value) || 0;
-  APP.saleCart.push({ wasteName: t, mode: APP.sellMode, bankWeight: bank, buyerWeight: buyer, sellPrice: price, weight: bank });
+  var _rsel = document.getElementById('sellDiffReason');
+  var reason = (_rsel && document.getElementById('sellReasonRow').style.display !== 'none') ? _rsel.value : '';
+  APP.saleCart.push({ wasteName: t, mode: APP.sellMode, bankWeight: bank, buyerWeight: buyer, sellPrice: price, weight: bank, reason: reason });
+  if (_rsel) _rsel.value = '';
   document.getElementById('sellWaste').value = '';
   document.getElementById('sellBankWeight').value = '';
   document.getElementById('sellBuyerWeight').value = '';
@@ -3076,7 +3169,7 @@ function sellSubmit(btn) {
   showToast('กำลังบันทึก ' + cart.length + ' รายการ...', 'success');
   // [harden v1.4] ส่งทั้งบิลครั้งเดียว → backend บันทึกแบบ atomic (สำเร็จ/ล้มเหลวทั้งบิล) แทนวนทีละรายการ
   var items = cart.map(function(it) {
-    return { wasteName: it.wasteName, mode: it.mode, bankWeight: it.bankWeight, buyerWeight: it.buyerWeight, sellPrice: it.sellPrice };
+    return { wasteName: it.wasteName, mode: it.mode, bankWeight: it.bankWeight, buyerWeight: it.buyerWeight, sellPrice: it.sellPrice, reason: it.reason || '' };
   });
   callServer('processMultiSale', { items: items, buyerId: buyerId, buyerName: buyerName, note: note }, function(r) {
     btn.disabled = false;
@@ -4175,9 +4268,14 @@ function catImport(btn) {
   });
 }
 function refreshStock() { callServer('clearCacheKeys',{keys:['inventory_map']},function(){loadStock();}); }
+function _wrRangePayload() {
+  var rng = (document.getElementById('wrRange') || {}).value || '90';
+  if (rng === 'all') return { all: true };
+  return { from: new Date(Date.now() - parseInt(rng, 10) * 24 * 60 * 60 * 1000).toISOString() };
+}
 function loadWeightReport() {
   document.getElementById('wrContent').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
-  callServer('getWeightDiscrepancyReport', {}, function(r) {
+  callServer('getWeightDiscrepancyReport', _wrRangePayload(), function(r) {
     if (!r.success) { document.getElementById('wrContent').innerHTML = '<div style="color:#c62828">' + esc(r.message) + '</div>'; return; }
     APP.wrData = r.data || { rows: [] };
     var buyers = {}, types = {};
@@ -4216,12 +4314,12 @@ function renderWeightReport() {
   var head = '<table style="width:100%;border-collapse:collapse;font-size:12px"><tr style="background:#eef4f1;color:#5f7a6e"><th style="padding:6px 3px;text-align:left">วันที่/ประเภท</th><th style="padding:6px 2px">โหมด</th><th style="padding:6px 2px">เรา</th><th style="padding:6px 2px">ร้าน</th><th style="padding:6px 2px">ต่าง</th><th style="padding:6px 2px">%</th></tr>';
   var body = rows.map(function(x) {
     var mtag = (x.mode === 'ยกลอต') ? '<span style="font-size:9px;background:#e7f0ff;color:#2b6fd6;padding:1px 5px;border-radius:6px">ยกลอต</span>' : '<span style="font-size:9px;background:#fef0e7;color:#c47a2b;padding:1px 5px;border-radius:6px">บางส่วน</span>';
-    var c = Math.abs(x.pct) > 3 ? '#c62828' : '#555';
-    return '<tr style="border-bottom:1px solid #f0f3f2"><td style="padding:6px 3px;text-align:left"><b>' + esc(x.wasteType) + '</b><br><span style="font-size:10px;color:#999">' + esc(x.date) + ' · ' + esc(x.buyerName) + '</span></td><td style="text-align:center">' + mtag + '</td><td style="text-align:center">' + x.bankWeight.toFixed(1) + '</td><td style="text-align:center">' + x.buyerWeight.toFixed(1) + '</td><td style="text-align:center;color:' + c + ';font-weight:700">' + x.diff.toFixed(1) + '</td><td style="text-align:center;color:' + c + '">' + x.pct.toFixed(1) + '</td></tr>';
+    var c = Math.abs(x.pct) > _wrTh() ? '#c62828' : '#555';
+    return '<tr style="border-bottom:1px solid #f0f3f2"><td style="padding:6px 3px;text-align:left"><b>' + esc(x.wasteType) + '</b><br><span style="font-size:10px;color:#999">' + esc(x.date) + ' · ' + esc(x.buyerName) + (x.reason ? ' · ' + esc(x.reason) : '') + '</span></td><td style="text-align:center">' + mtag + '</td><td style="text-align:center">' + x.bankWeight.toFixed(1) + '</td><td style="text-align:center">' + x.buyerWeight.toFixed(1) + '</td><td style="text-align:center;color:' + c + ';font-weight:700">' + x.diff.toFixed(1) + '</td><td style="text-align:center;color:' + c + '">' + x.pct.toFixed(1) + '</td></tr>';
   }).join('');
   var sumHtml = '<div style="background:#f2fbf6;border:1px solid #cdeede;border-radius:9px;padding:10px;margin-top:10px;font-size:12px;color:#0a3d2c">รวมส่วนต่าง: <b>' + (Math.round(tDiff * 100) / 100) + ' กก.</b> · เฉลี่ย <b>' + avgPct + '%</b><br>เรา ' + (Math.round(tBank * 10) / 10) + ' / ร้าน ' + (Math.round(tBuyer * 10) / 10) + ' กก. · มูลค่าที่หาย <b>฿' + (Math.round(tLost * 100) / 100).toLocaleString() + '</b> (' + rows.length + ' รายการ)</div>';
-  var warns = Object.keys(byBuyer).map(function(k) { var b = byBuyer[k]; return { name: b.name, p: b.bank > 0 ? Math.round(b.diff / b.bank * 1000) / 10 : 0 }; }).filter(function(b) { return Math.abs(b.p) > 3; });
-  var warnHtml = warns.length ? '<div style="background:#fff4e5;border:1px solid #ffd9a0;border-radius:9px;padding:10px;margin-top:8px;font-size:11.5px;color:#a05a00">⚠️ ร้านที่ส่วนต่างเกิน 3%:<br>' + warns.map(function(b) { return '<b>' + esc(b.name) + '</b> เฉลี่ย ' + b.p + '%'; }).join('<br>') + '<br>→ ควรตรวจตาชั่ง/ความชื้น/เทียบใบชั่ง</div>' : '';
+  var warns = Object.keys(byBuyer).map(function(k) { var b = byBuyer[k]; return { name: b.name, p: b.bank > 0 ? Math.round(b.diff / b.bank * 1000) / 10 : 0 }; }).filter(function(b) { return Math.abs(b.p) > _wrTh(); });
+  var warnHtml = warns.length ? '<div style="background:#fff4e5;border:1px solid #ffd9a0;border-radius:9px;padding:10px;margin-top:8px;font-size:11.5px;color:#a05a00">⚠️ ร้านที่ส่วนต่างเกิน ' + _wrTh() + '%:<br>' + warns.map(function(b) { return '<b>' + esc(b.name) + '</b> เฉลี่ย ' + b.p + '%'; }).join('<br>') + '<br>→ ควรตรวจตาชั่ง/ความชื้น/เทียบใบชั่ง</div>' : '';
   box.innerHTML = head + body + '</table>' + sumHtml + warnHtml;
 }
 function exportWeightReport() {
@@ -4233,6 +4331,17 @@ function exportWeightReport() {
   var url = URL.createObjectURL(blob);
   var a = document.createElement('a'); a.href = url; a.download = 'weight_report.csv'; document.body.appendChild(a); a.click();
   setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+}
+function exportWeightReportPdf() {   // [v2.1] PDF ผ่าน backend (pattern เดียวกับส่งออกธุรกรรม)
+  var p = _wrRangePayload();
+  var fb = document.getElementById('wrBuyer').value, ft = document.getElementById('wrType').value;
+  var ff = document.getElementById('wrFrom').value, fto = document.getElementById('wrTo').value;
+  if (fb) p.buyerId = fb;
+  if (ft) p.wasteType = ft;
+  if (ff) { p.from = ff; delete p.all; }
+  if (fto) p.to = fto;
+  showToast('กำลังสร้าง PDF...', '');
+  callServer('exportWeightReportPdf', p, _dlExport);
 }
 
 function refreshSell() { callServer('clearCacheKeys',{keys:['inventory_map']},function(){loadSellData();}); }
