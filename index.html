@@ -244,7 +244,66 @@
     #loginScreen .wb-btn{width:100%;background:linear-gradient(135deg,#06c755,#00b900);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(0,176,0,.35);margin-top:4px;font-family:inherit;}
     #loginScreen .wb-btn:active{transform:scale(.98);}
     #loginScreen .wb-foot{text-align:center;font-size:11px;color:#adb5bd;margin-top:24px;line-height:1.7;}
-  </style>
+  
+/* ═══ [v2.3.0] หน้าจัดการสิทธิ์ — mobile-first ═══ */
+.pm-tabs { display:flex; background:#f1f3f4; border-radius:11px; padding:3px; margin-bottom:12px; }
+.pm-tab { flex:1; text-align:center; font-size:13.5px; padding:8px 0; border-radius:9px; color:#777; cursor:pointer; }
+.pm-tab.on { background:#fff; color:#1b5e20; font-weight:700; box-shadow:0 1px 3px rgba(0,0,0,.08); }
+.pm-chips { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+.pm-chip { flex:1; min-width:70px; text-align:center; font-size:13.5px; padding:9px 4px; border-radius:9px;
+           border:1.5px solid #e0e0e0; color:#666; background:#fff; cursor:pointer; }
+.pm-chip.on { background:#1565c0; border-color:#1565c0; color:#fff; font-weight:700; }
+.pm-chip.ro { border-color:#ce93d8; color:#7b1fa2; }
+.pm-chip.ro.on { background:#7b1fa2; border-color:#7b1fa2; color:#fff; }
+.pm-hint { font-size:13.5px; color:#999; margin-bottom:12px; }
+.pm-banner { background:#f3e5f5; border-left:4px solid #7b1fa2; padding:10px 12px; font-size:13.5px;
+             color:#4a148c; border-radius:0 9px 9px 0; margin-bottom:12px; line-height:1.5; }
+.pm-grp { border:1px solid #e4e7ea; border-radius:11px; margin-bottom:9px; overflow:hidden; }
+.pm-grp.dim .pm-ghead { background:#fafafa; }
+.pm-grp.dim .pm-gname { color:#999; }
+.pm-ghead { display:flex; justify-content:space-between; align-items:center; gap:8px;
+            padding:11px 12px; background:#f7f9fa; cursor:pointer; position:sticky; top:0; z-index:2; }
+.pm-gname { font-size:13.5px; font-weight:700; }
+.pm-gcount { font-size:13.5px; color:#00a63f; background:#e8f5e9; padding:1px 8px; border-radius:11px; }
+.pm-gcount.zero { color:#999; background:#eceff1; }
+.pm-gact { font-size:13.5px; color:#1565c0; }
+.pm-caret { font-size:13.5px; color:#aaa; }
+.pm-gbody.hidden { display:none; }
+.pm-row { display:flex; justify-content:space-between; align-items:center; gap:10px;
+          padding:11px 12px; border-top:1px solid #f0f0f0; }
+.pm-row.sens { border-left:4px solid #ff9800; background:#fffdf7; }
+.pm-row.locked { background:#fbf7fd; }
+.pm-l { flex:1; min-width:0; }
+.pm-n { font-size:13.5px; }
+.pm-d { font-size:13.5px; color:#999; line-height:1.4; margin-top:2px; }
+.pm-warn { font-size:13.5px; color:#e65100; }
+.pm-lock { font-size:13.5px; color:#7b1fa2; background:#f3e5f5; padding:1px 7px; border-radius:11px; }
+.pm-tog { width:44px; height:25px; border-radius:14px; background:#00a63f; position:relative; flex-shrink:0; cursor:pointer; }
+.pm-tog.off { background:#cfd8dc; }
+.pm-tog.lk { background:#ce93d8; cursor:default; }
+.pm-tog.lk.off { background:#e0e0e0; }
+.pm-knob { width:19px; height:19px; border-radius:11px; background:#fff; position:absolute; top:3px; right:3px; }
+.pm-tog.off .pm-knob { left:3px; right:auto; }
+.pm-savebar { position:sticky; bottom:0; background:#fff; border-top:1px solid #e0e0e0; margin-top:10px;
+              padding:10px 2px; display:flex; justify-content:space-between; align-items:center; gap:8px; z-index:3; }
+.pm-chg { font-size:13.5px; color:#e65100; }
+.pm-chg.none { color:#999; }
+.pm-btn { background:#00a63f; color:#fff; padding:9px 18px; border:none; border-radius:9px;
+          font-size:13.5px; font-weight:700; font-family:inherit; cursor:pointer; }
+.pm-btn.grey { background:#eceff1; color:#666; }
+.pm-btn[disabled] { opacity:.6; cursor:default; }
+table.pm-ov { width:100%; border-collapse:collapse; font-size:13.5px; }
+.pm-ov th { color:#666; padding:7px 0; border-bottom:2px solid #e0e0e0; font-weight:700; }
+.pm-ov th.fn, .pm-ov td.fn { text-align:left; }
+.pm-ov th.c, .pm-ov td.c { text-align:center; width:44px; }
+.pm-ov td { padding:8px 0; border-bottom:1px solid #f2f2f2; }
+.pm-ovgrp td { background:#e3e7ea; color:#333; font-weight:700; padding:5px 8px; }
+.pm-rh { display:inline-block; font-size:13.5px; font-weight:700; padding:2px 7px; border-radius:7px; color:#fff; }
+.pm-y { color:#00a63f; font-weight:700; }
+.pm-no { color:#ccc; }
+.pm-note { background:#fff8e1; border-left:4px solid #ffb300; padding:10px 12px; font-size:13.5px;
+           color:#6d4c41; border-radius:0 9px 9px 0; margin-top:12px; line-height:1.5; }
+</style>
   <div class="wb-wrap">
     <div class="wb-icon"><svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="wbga" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06c755"/><stop offset="1" stop-color="#00a94f"/></linearGradient></defs><rect width="512" height="512" fill="url(#wbga)"/><path d="M0 0h512v210C380 150 300 250 160 190 90 160 40 200 0 240z" fill="#ffffff" opacity="0.08"/><g transform="translate(256,150)" fill="none" stroke="#c3fae8" stroke-width="16" stroke-linecap="round"><path d="M-34 6 a34 34 0 1 1 46 30"/><path d="M12 42 l14 -6 -4 15 z" fill="#c3fae8" stroke="none"/></g><text x="256" y="360" text-anchor="middle" font-family="Inter,Arial" font-weight="900" font-size="200" fill="#ffffff" letter-spacing="-8">WB</text></svg></div>
     <div class="wb-title">ธนาคารขยะชุมชน</div>
@@ -765,33 +824,49 @@
         <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
         <div class="card">
           <div class="card-title" style="justify-content:space-between"><span>🛡️ จัดการสิทธิ์</span><button onclick="loadRolePerms()" class="btn-refresh">🔄</button></div>
-          <div style="background:#fff8e1;color:#8a6d00;font-size:12px;padding:8px 12px;border-radius:9px;margin-bottom:10px">🔒 Admin เต็มสิทธิ์เสมอ · แตะจุดสีหัวคอลัมน์เพื่อเลือกทั้งบทบาท · จัดการผู้ใช้/สิทธิ์ = Admin เท่านั้น</div>
-          <div style="background:#fff0f7;border:1px solid #ffcfe6;border-radius:10px;padding:10px 12px;margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-              <b style="color:#c0186f;white-space:nowrap">❤️ รับบริจาคขยะ</b>
-              <select id="donateModeSel" onchange="setDonateMode(this.value)" style="flex:1;max-width:180px;height:38px;border:1.5px solid #e6a9cd;border-radius:9px;padding:0 8px;font-family:inherit;font-size:14px;font-weight:700;color:#c0186f;background:#fff">
-                <option value="off">ปิด</option>
-                <option value="partial">บางส่วน</option>
-                <option value="all">เลือกได้</option>
-                <option value="donate_all">บริจาคทั้งหมด</option>
-              </select>
-            </div>
-            <div id="donateModeDesc" style="font-size:11.5px;color:#a06;margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;line-height:1.5"></div>
+
+          <!-- [v2.3.0] แท็บ: สิทธิ์รายบทบาท / ภาพรวม / ค่าระดับองค์กร -->
+          <div class="pm-tabs">
+            <div class="pm-tab on" id="pmTab_perm" onclick="permSetTab('perm')">สิทธิ์ผู้ใช้</div>
+            <div class="pm-tab"    id="pmTab_ov"   onclick="permSetTab('ov')">ภาพรวม</div>
+            <div class="pm-tab"    id="pmTab_sys"  onclick="permSetTab('sys')">ตั้งค่าระบบ</div>
           </div>
-          <div style="background:#fff8e6;border:1px solid #ffe3a0;border-radius:10px;padding:10px 12px;margin-bottom:10px">
-            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-              <b style="color:#8a6d1a;white-space:nowrap">⚖️ เกณฑ์เตือนส่วนต่าง</b>
-              <span style="display:flex;align-items:center;gap:6px">
-                <input type="text" inputmode="decimal" id="diffThInput" style="width:64px;height:36px;border:1.5px solid #ffd9a0;border-radius:9px;text-align:center;font-weight:700;color:#8a6d1a;font-family:inherit;font-size:14px">
-                <span style="color:#8a6d1a;font-weight:700">%</span>
-                <button type="button" onclick="saveDiffThreshold()" class="btn btn-primary" style="width:auto;padding:8px 14px;margin:0;font-size:13px">บันทึก</button>
-              </span>
-            </div>
-            <div style="font-size:11.5px;color:#a58a2d;margin-top:6px">ใช้เตือนในหน้าขาย + รายงานส่วนต่างน้ำหนัก เมื่อส่วนต่างเกินเกณฑ์นี้ (ค่าเริ่มต้น 3%)</div>
+
+          <div id="pmPane_perm">
+            <div id="permRoleChips" class="pm-chips"></div>
+            <div id="permRoleHint"></div>
+            <div id="permGroupWrap"><div class="loading"><div class="spinner"></div></div></div>
+            <div id="permSaveBar" class="pm-savebar"></div>
           </div>
-          <div id="permLegend" class="perm-legend"></div>
-          <div id="permTableWrap"><div class="loading"><div class="spinner"></div></div></div>
-          <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="saveRolePerms(this)">💾 บันทึกการตั้งค่า</button>
+
+          <div id="pmPane_ov" class="hidden"><div id="permOverviewWrap"></div></div>
+
+          <div id="pmPane_sys" class="hidden">
+            <div style="background:#fff0f7;border:1px solid #ffcfe6;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <b style="color:#c0186f;white-space:nowrap">❤️ รับบริจาคขยะ</b>
+                <select id="donateModeSel" onchange="setDonateMode(this.value)" style="flex:1;max-width:180px;height:38px;border:1.5px solid #e6a9cd;border-radius:9px;padding:0 8px;font-family:inherit;font-size:14px;font-weight:700;color:#c0186f;background:#fff">
+                  <option value="off">ปิด</option>
+                  <option value="partial">บางส่วน</option>
+                  <option value="all">เลือกได้</option>
+                  <option value="donate_all">บริจาคทั้งหมด</option>
+                </select>
+              </div>
+              <div id="donateModeDesc" style="font-size:11.5px;color:#a06;margin-top:8px;background:#fff;border-radius:8px;padding:8px 10px;line-height:1.5"></div>
+            </div>
+            <div style="background:#fff8e6;border:1px solid #ffe3a0;border-radius:10px;padding:10px 12px;margin-bottom:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+                <b style="color:#8a6d1a;white-space:nowrap">⚖️ เกณฑ์เตือนส่วนต่าง</b>
+                <span style="display:flex;align-items:center;gap:6px">
+                  <input type="text" inputmode="decimal" id="diffThInput" style="width:64px;height:36px;border:1.5px solid #ffd9a0;border-radius:9px;text-align:center;font-weight:700;color:#8a6d1a;font-family:inherit;font-size:14px">
+                  <span style="color:#8a6d1a;font-weight:700">%</span>
+                  <button type="button" onclick="saveDiffThreshold()" class="btn btn-primary" style="width:auto;padding:8px 14px;margin:0;font-size:13px">บันทึก</button>
+                </span>
+              </div>
+              <div style="font-size:11.5px;color:#a58a2d;margin-top:6px">ใช้เตือนในหน้าขาย + รายงานส่วนต่างน้ำหนัก เมื่อส่วนต่างเกินเกณฑ์นี้ (ค่าเริ่มต้น 3%)</div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
@@ -934,6 +1009,15 @@ var APP = {
 // ═══════════════════════════════════════════════════════════════════════
 
 // [H2 FIX] Escape HTML entities — ป้องกัน XSS จากข้อมูลที่ render ลง innerHTML
+// ═══ [v2.2.0 hide-value] มูลค่าที่ถูกปิดจะมาเป็น null จาก backend ═══
+//   hasVal() = มีสิทธิ์เห็นค่านี้ไหม · baht() = สร้างข้อความเงิน หรือคืน '' เมื่อถูกปิด
+//   จงใจคืนสตริงว่าง ไม่ใช่ '฿0' เพราะ 0 ทำให้เข้าใจผิดว่ายอดเป็นศูนย์จริง
+function hasVal(v) { return v !== null && v !== undefined && v !== ''; }
+function baht(v, dec) {
+  if (!hasVal(v)) return '';
+  var o = (dec === undefined) ? {} : { minimumFractionDigits: dec };
+  return '฿' + Number(v).toLocaleString(undefined, o);
+}
 function esc(str) {
   if (str === null || str === undefined) return '';
   var s = String(str);
@@ -1643,7 +1727,7 @@ function loadMyAccount() {
         '<div style="display:flex;gap:10px;margin-top:12px">' +
           '<div style="flex:1;background:#e8f5e9;border-radius:12px;padding:12px;text-align:center">' +
             '<div style="font-size:12px;color:#2e7d32">ยอดเงินคงเหลือ</div>' +
-            '<div style="font-size:22px;font-weight:700;color:#2e7d32">฿' + (b.currentBalance||0).toLocaleString() + '</div></div>' +
+            '<div style="font-size:22px;font-weight:700;color:#2e7d32">' + (hasVal(b.currentBalance) ? baht(b.currentBalance) : '—') + '</div></div>' +
           '<div style="flex:1;background:#ede7f6;border-radius:12px;padding:12px;text-align:center">' +
             '<div style="font-size:12px;color:#5e35b1">แต้มสะสม</div>' +
             '<div style="font-size:22px;font-weight:700;color:#5e35b1">' + (b.pointsBalance||0).toLocaleString() + '</div></div>' +
@@ -1671,7 +1755,7 @@ function loadMyHistory() {
         '<div style="display:flex;justify-content:space-between">' +
           '<div><div class="list-title">' + esc(t.type) + ' · ' + esc(t.wasteType) + '</div>' +
           '<div class="list-subtitle">' + esc(t.createdAt) + (t.pointsEarned ? ' · +' + t.pointsEarned + ' แต้ม' : '') + '</div></div>' +
-          '<div style="font-weight:700;color:' + col + '">' + sign + '฿' + (t.amount||0).toLocaleString() + '</div>' +
+          '<div style="font-weight:700;color:' + col + '">' + (hasVal(t.amount) ? (sign + baht(t.amount)) : '') + '</div>' +
         '</div></div>';
     }).join('');
   });
@@ -1723,74 +1807,213 @@ function setDonateMode(mode) {
   });
 }
 
+// ═══════════════════════════════════════════════════════════════════════
+// จัดการสิทธิ์ [v2.3.0] — role-first + หมวดพับได้ + state object (ไม่อ่านจาก DOM)
+// ═══════════════════════════════════════════════════════════════════════
+var _permState  = null;   // { role: { fid: bool } } — แหล่งความจริงระหว่างแก้
+var _permOrig   = null;   // สำเนาค่าที่บันทึกไว้ล่าสุด (ไว้นับว่าแก้ไปกี่รายการ)
+var _permRole   = '';
+var _permGroups = [];     // [{ name, items:[feature] }] เรียงตามลำดับจาก server
+var _permOpen   = {};     // ดัชนีหมวด -> กาง/พับ
+
 function loadRolePerms() {
   _renderDonateToggle();
-  document.getElementById('permTableWrap').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  document.getElementById('permGroupWrap').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   callServer('getRolePermissions', {}, function(r) {
-    if (!r.success) { document.getElementById('permTableWrap').innerHTML = '<div style="color:#c62828">' + esc(r.message) + '</div>'; return; }
+    if (!r.success) { document.getElementById('permGroupWrap').innerHTML = '<div style="color:#c62828">' + esc(r.message) + '</div>'; return; }
     _permData = r.data;
+    _permInit();
     renderRolePerms();
   });
 }
 
-function renderRolePerms() {
-  var d = _permData;
-  document.getElementById('permLegend').innerHTML = d.roles.map(function(ro) {
-    return '<span><span class="perm-dot" style="background:' + (_roleColors[ro.id]||'#888') + '"></span>' + esc(ro.label) + '</span>';
-  }).join('');
-
-  var head = '<tr><th class="pf" style="font-size:11px;color:#888">ฟังก์ชัน</th>';
-  d.roles.forEach(function(ro, idx) {
-    var click = (ro.id === 'admin') ? '' : ' onclick="permToggleCol(' + idx + ')" style="cursor:pointer"';
-    head += '<th class="pc"><span class="perm-dot" style="background:' + (_roleColors[ro.id]||'#888') + '"' + click + '></span></th>';
-  });
-  head += '</tr>';
-
-  var body = '', lastGroup = '';
-  d.features.forEach(function(f) {
-    if (f.group !== lastGroup) { body += '<tr class="pgrp"><td colspan="' + (d.roles.length + 1) + '">' + esc(f.group) + '</td></tr>'; lastGroup = f.group; }
-    body += '<tr class="prow" data-fid="' + esc(f.id) + '"><td class="pf">' + esc(f.label) + (f.locked ? ' 🔒' : '') + '</td>';
-    d.roles.forEach(function(ro) {
-      var on, disabled;
-      if (ro.id === 'admin') { on = true; disabled = true; }
-      else if (f.locked)     { on = false; disabled = true; }
-      else { on = !!(d.matrix[ro.id] && d.matrix[ro.id][f.id]); disabled = false; }
-      body += '<td class="pc"><input type="checkbox" data-role="' + esc(ro.id) + '"' + (on ? ' checked' : '') + (disabled ? ' disabled' : '') + '></td>';
-    });
-    body += '</tr>';
-  });
-
-  document.getElementById('permTableWrap').innerHTML =
-    '<table class="perm-table" id="permTable"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+function _permIsReadonly(role) {
+  var ro = (_permData && _permData.readonlyRoles) || [];
+  return role === 'admin' || ro.indexOf(role) !== -1;
+}
+function _permEditableRoles() {
+  return (_permData.roles || []).filter(function(r) { return r.id !== 'admin'; });
+}
+function _permForced(role, fid) {
+  var f = _permData && _permData.forced;
+  return !!(f && f[role] && f[role][fid]);
 }
 
-function permToggleCol(colIdx) {
-  var boxes = [];
-  document.querySelectorAll('#permTable tbody tr.prow').forEach(function(r) {
-    var b = r.querySelectorAll('input')[colIdx]; if (b && !b.disabled) boxes.push(b);
+function _permInit() {
+  var d = _permData;
+  _permState = {}; _permOrig = {};
+  d.roles.forEach(function(ro) {
+    if (ro.id === 'admin') return;
+    _permState[ro.id] = {}; _permOrig[ro.id] = {};
+    d.features.forEach(function(f) {
+      var on = f.locked ? false : (_permForced(ro.id, f.id) ? true : !!(d.matrix[ro.id] && d.matrix[ro.id][f.id]));
+      _permState[ro.id][f.id] = on;
+      _permOrig[ro.id][f.id]  = on;
+    });
   });
-  var allOn = boxes.every(function(b) { return b.checked; });
-  boxes.forEach(function(b) { b.checked = !allOn; });
+  _permGroups = []; var seen = {};
+  d.features.forEach(function(f) {
+    if (seen[f.group] === undefined) { seen[f.group] = _permGroups.length; _permGroups.push({ name: f.group, items: [] }); }
+    _permGroups[seen[f.group]].items.push(f);
+  });
+  _permOpen = {};
+  _permGroups.forEach(function(g, i) { _permOpen[i] = (i === 0); });   // กางหมวดแรก พับที่เหลือ
+  var er = _permEditableRoles();
+  if (!_permRole || !_permState[_permRole]) _permRole = er.length ? er[0].id : '';
+}
+
+function renderRolePerms() {
+  if (!_permData || !_permState) return;
+  var d = _permData, role = _permRole, readonly = _permIsReadonly(role), st = _permState[role] || {};
+
+  document.getElementById('permRoleChips').innerHTML = _permEditableRoles().map(function(r) {
+    return '<div class="pm-chip' + (r.id === role ? ' on' : '') + (_permIsReadonly(r.id) ? ' ro' : '') +
+           '" onclick="permSelectRole(\'' + r.id + '\')">' + esc(r.label) + '</div>';
+  }).join('');
+
+  document.getElementById('permRoleHint').innerHTML = readonly
+    ? '<div class="pm-banner">' + esc((d.roleLockNote && d.roleLockNote[role]) || 'บทบาทนี้ปรับไม่ได้') + '</div>'
+    : '<div class="pm-hint">Admin ไม่มีในรายการ เพราะได้ทุกสิทธิ์เสมอ ปรับไม่ได้</div>';
+
+  document.getElementById('permGroupWrap').innerHTML = _permGroups.map(function(g, gi) {
+    var editable = g.items.filter(function(f) { return !f.locked; });
+    var onCount  = editable.filter(function(f) { return st[f.id]; }).length;
+    var allOn    = editable.length > 0 && onCount === editable.length;
+    var open     = !!_permOpen[gi];
+
+    var head = '<div class="pm-ghead" onclick="permToggleGroup(' + gi + ')">' +
+        '<div><span class="pm-gname">' + esc(g.name) + '</span> ' +
+          '<span class="pm-gcount' + (onCount ? '' : ' zero') + '">' + onCount + '/' + editable.length + '</span></div>' +
+        '<div>' +
+          (readonly || !editable.length ? '<span class="pm-lock">ล็อก</span>'
+            : '<span class="pm-gact" onclick="event.stopPropagation();permGroupAll(' + gi + ',' + (allOn ? 'false' : 'true') + ')">' +
+              (allOn ? 'ปิดทั้งหมด' : 'เปิดทั้งหมด') + '</span>') +
+          ' <span class="pm-caret">' + (open ? '▾' : '▸') + '</span>' +
+        '</div></div>';
+
+    // [สำคัญ] พับด้วย class hidden เท่านั้น — ห้ามลบ element เพราะ state ไม่ได้อยู่ใน DOM แล้วก็จริง
+    //         แต่คงไว้เพื่อให้กางกลับมาแล้วไม่ต้อง render ใหม่ทั้งหน้า
+    var rows = g.items.map(function(f) {
+      var forced = _permForced(role, f.id);
+      var lock   = f.locked || readonly || forced;
+      var on     = f.locked ? false : !!st[f.id];
+      var tags   = (f.sensitive ? ' <span class="pm-warn">ข้อมูลอ่อนไหว</span>' : '') +
+                   (f.locked ? ' <span class="pm-lock">Admin เท่านั้น</span>' : (forced ? ' <span class="pm-lock">บังคับเปิด</span>' : ''));
+      return '<div class="pm-row' + (f.sensitive ? ' sens' : '') + (lock ? ' locked' : '') + '">' +
+               '<div class="pm-l"><div class="pm-n">' + esc(f.label) + tags + '</div>' +
+                 '<div class="pm-d">' + esc(f.desc || '') + '</div></div>' +
+               '<div class="pm-tog' + (on ? '' : ' off') + (lock ? ' lk' : '') + '"' +
+                 (lock ? '' : ' onclick="permToggle(\'' + f.id + '\')"') + '><div class="pm-knob"></div></div>' +
+             '</div>';
+    }).join('');
+
+    return '<div class="pm-grp' + (readonly ? ' dim' : '') + '">' + head +
+           '<div class="pm-gbody' + (open ? '' : ' hidden') + '">' + rows + '</div></div>';
+  }).join('');
+
+  _permRenderSaveBar();
+}
+
+function _permChangedCount() {
+  if (!_permState || !_permOrig) return 0;
+  var n = 0;
+  Object.keys(_permState).forEach(function(r) {
+    Object.keys(_permState[r]).forEach(function(f) { if (_permState[r][f] !== _permOrig[r][f]) n++; });
+  });
+  return n;
+}
+function _permRenderSaveBar() {
+  var bar = document.getElementById('permSaveBar'); if (!bar) return;
+  var readonly = _permIsReadonly(_permRole), n = _permChangedCount(), can = (n > 0);
+  bar.innerHTML =
+    '<span class="pm-chg' + (can ? '' : ' none') + '">' +
+      (readonly && !can ? 'แก้ไขไม่ได้' : (can ? 'แก้ไข ' + n + ' รายการ' : 'ยังไม่มีการแก้ไข')) + '</span>' +
+    '<span>' +
+      (can ? '<button type="button" class="pm-btn grey" onclick="permRevert()">ยกเลิกที่แก้</button> ' : '') +
+      '<button type="button" class="pm-btn' + (can ? '' : ' grey') + '" onclick="saveRolePerms(this)"' +
+        (can ? '' : ' disabled') + '>บันทึก</button>' +
+    '</span>';
+}
+
+function permSelectRole(r) { _permRole = r; renderRolePerms(); }
+function permToggleGroup(gi) { _permOpen[gi] = !_permOpen[gi]; renderRolePerms(); }
+function permToggle(fid) {
+  if (_permIsReadonly(_permRole)) return;
+  var st = _permState[_permRole]; if (!st) return;
+  st[fid] = !st[fid];
+  renderRolePerms();
+}
+function permGroupAll(gi, on) {
+  if (_permIsReadonly(_permRole)) return;
+  var st = _permState[_permRole]; if (!st) return;
+  _permGroups[gi].items.forEach(function(f) {
+    if (f.locked || _permForced(_permRole, f.id)) return;
+    st[f.id] = !!on;
+  });
+  _permOpen[gi] = true;
+  renderRolePerms();
+}
+function permRevert() {
+  if (!_permOrig) return;
+  Object.keys(_permOrig).forEach(function(r) {
+    Object.keys(_permOrig[r]).forEach(function(f) { _permState[r][f] = _permOrig[r][f]; });
+  });
+  renderRolePerms();
+  showToast('คืนค่าที่บันทึกไว้ล่าสุดแล้ว', 'success');
+}
+
+function permSetTab(t) {
+  ['perm','ov','sys'].forEach(function(k) {
+    var pane = document.getElementById('pmPane_' + k), tab = document.getElementById('pmTab_' + k);
+    if (pane) pane.classList.toggle('hidden', k !== t);
+    if (tab)  tab.classList.toggle('on', k === t);
+  });
+  if (t === 'ov') renderPermOverview();
+}
+
+function _permShortRole(lbl) {
+  var m = { Manager:'Mgr', Operator:'Ope', Viewer:'View', Member:'Mem' };
+  return m[lbl] || String(lbl || '').slice(0, 4);
+}
+function renderPermOverview() {
+  if (!_permData || !_permState) return;
+  var roles = _permEditableRoles();
+  var head = '<tr><th class="fn">ฟังก์ชัน</th>' + roles.map(function(r) {
+      return '<th class="c"><span class="pm-rh" style="background:' + (_roleColors[r.id] || '#888') + '">' +
+             esc(_permShortRole(r.label)) + '</span></th>';
+    }).join('') + '</tr>';
+  var body = _permGroups.map(function(g) {
+    return '<tr class="pm-ovgrp"><td colspan="' + (roles.length + 1) + '">' + esc(g.name) + '</td></tr>' +
+      g.items.map(function(f) {
+        return '<tr class="pm-ovrow" onclick="permSetTab(\'perm\')"><td class="fn">' + esc(f.label) + '</td>' +
+          roles.map(function(r) {
+            var on = f.locked ? false : !!(_permState[r.id] && _permState[r.id][f.id]);
+            return '<td class="c">' + (on ? '<span class="pm-y">✔</span>' : '<span class="pm-no">–</span>') + '</td>';
+          }).join('') + '</tr>';
+      }).join('');
+  }).join('');
+  document.getElementById('permOverviewWrap').innerHTML =
+    '<table class="pm-ov">' + head + body + '</table>' +
+    '<div class="pm-note">Admin ไม่มีคอลัมน์ เพราะได้ทุกสิทธิ์เสมอ · ตารางนี้แสดงค่าที่กำลังแก้อยู่ ยังไม่ได้บันทึก</div>';
 }
 
 function saveRolePerms(btn) {
-  if (!_permData) return;
+  if (!_permState) return;
   var matrix = {};
-  _permData.roles.forEach(function(ro) { if (ro.id !== 'admin') matrix[ro.id] = {}; });
-  document.querySelectorAll('#permTable tbody tr.prow').forEach(function(row) {
-    var fid = row.getAttribute('data-fid');
-    row.querySelectorAll('input').forEach(function(inp) {
-      var role = inp.getAttribute('data-role');
-      if (role === 'admin' || inp.disabled) return;
-      if (!matrix[role]) matrix[role] = {};
-      matrix[role][fid] = inp.checked;
-    });
+  Object.keys(_permState).forEach(function(r) {
+    matrix[r] = {};
+    Object.keys(_permState[r]).forEach(function(f) { matrix[r][f] = !!_permState[r][f]; });
   });
-  btn.disabled = true;
+  if (btn) btn.disabled = true;
   callServer('saveRolePermissions', { matrix: matrix }, function(r) {
-    btn.disabled = false;
-    if (r.success) showToast('บันทึกสิทธิ์แล้ว (' + r.count + ' รายการ)', 'success');
-    else showToast(r.message, 'error');
+    if (btn) btn.disabled = false;
+    if (!r.success) { showToast(r.message, 'error'); return; }
+    Object.keys(_permState).forEach(function(role) {
+      _permOrig[role] = {};
+      Object.keys(_permState[role]).forEach(function(f) { _permOrig[role][f] = _permState[role][f]; });
+    });
+    _permRenderSaveBar();
+    showToast('บันทึกสิทธิ์แล้ว (' + r.count + ' รายการ)', 'success');
   });
 }
 
@@ -2236,9 +2459,11 @@ function showBalance(memberId) {
     document.getElementById('balanceDisplay').innerHTML =
       '<div class="balance-card"><div class="balance-name">' + esc(m.fullName) + '</div>' +
       '<div class="balance-info">' + memberIdentityLine(m) + '</div>' +
-      '<div class="balance-label" style="margin-top:12px">ยอดเงินคงเหลือ</div>' +
-      '<div class="balance-amount">฿' + (m.currentBalance||0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
-      '<div style="display:flex;justify-content:space-between;font-size:13px;opacity:0.9"><span>ฝากสะสม ฿' + (m.totalDeposit||0).toLocaleString() + '</span><span>ถอนสะสม ฿' + (m.totalWithdraw||0).toLocaleString() + '</span></div></div>' +
+      (hasVal(m.currentBalance)
+        ? '<div class="balance-label" style="margin-top:12px">ยอดเงินคงเหลือ</div>' +
+          '<div class="balance-amount">' + baht(m.currentBalance, 2) + '</div>' +
+          '<div style="display:flex;justify-content:space-between;font-size:13px;opacity:0.9"><span>ฝากสะสม ' + baht(m.totalDeposit) + '</span><span>ถอนสะสม ' + baht(m.totalWithdraw) + '</span></div>'
+        : '<div style="font-size:13px;opacity:0.9;margin-top:12px">ลด CO2 สะสม ' + (m.totalGhg||0).toLocaleString() + ' kg</div>') + '</div>' +
       '<div class="points-card"><div class="balance-label">แต้มคงเหลือ</div>' +
       '<div class="points-amount">' + (m.pointsBalance||0).toLocaleString() + ' แต้ม</div>' +
       '<div style="font-size:12px;opacity:0.85">ได้สะสม ' + (m.totalPointsEarned||0).toLocaleString() + ' | ใช้ไป ' + (m.totalPointsUsed||0).toLocaleString() + '</div></div>';
@@ -2515,14 +2740,14 @@ function renderDepCatalog() {
   g.innerHTML = list.map(function(p) {
     var inCart = null;
     for (var i = 0; i < APP.depositCart.length; i++) { if (APP.depositCart[i].code === p.code) { inCart = APP.depositCart[i]; break; } }
-    var hasPrice = (parseFloat(p.price) || 0) > 0;
+    var hasPrice = (p.hasPrice !== undefined) ? !!p.hasPrice : ((parseFloat(p.price) || 0) > 0);   // [v2.2.0] price อาจถูก mask เป็น null
     var isDon = !!p.donateOnly;   // [v1.8] บริจาคเท่านั้น
     var forceDon = isDon || (dmode === 'donate_all');   // [v2.0] บริจาคทั้งหมด
     var unit = String(p.unit || 'กก.');
     var priceHTML = forceDon
       ? '<div class="dep-pr" style="color:#c0186f;font-weight:700">❤️ บริจาค</div>'
       : (hasPrice
-        ? '<div class="dep-pr">' + p.price + '<span> ฿/' + esc(unit) + '</span></div>'
+        ? (hasVal(p.price) ? '<div class="dep-pr">' + p.price + '<span> ฿/' + esc(unit) + '</span></div>' : '')   // [v2.2.0] ไม่มีสิทธิ์ดูราคา = ไม่แสดงบรรทัดราคา
         : '<div class="dep-pr unset">ยังไม่ตั้งราคา</div>');
     var badge = inCart ? '<div class="dep-badge">' + esc(depItemQtyLabel(inCart)) + '</div>' : '';
     var cnt = stats[p.name] || 0;
@@ -2544,7 +2769,7 @@ function openDepKeypad(code) {
   var forceDon = isDon || (_dm === 'donate_all');    // [v2.0] บริจาคทั้งหมด = บังคับบริจาคทุกรายการ
   if (forceDon) {
     if (!(window.PROFILE && PROFILE.enableDonate)) { showToast('รายการนี้เป็นบริจาค — ต้องเปิดรับบริจาคก่อน (หน้าจัดการสิทธิ์)', 'error'); return; }
-  } else if ((parseFloat(p.price) || 0) <= 0) {
+  } else if (!((p.hasPrice !== undefined) ? !!p.hasPrice : ((parseFloat(p.price) || 0) > 0))) {   // [v2.2.0] อย่าตัดสินด้วย price ที่อาจถูก mask
     showToast('ยังไม่ได้ตั้งราคา — นำเข้าข้อมูลเพื่อบันทึกราคารับซื้อก่อน', 'error'); return;
   }
   APP.depEdit = p;
@@ -2606,7 +2831,7 @@ function setDepKind(k) {
 
 function renderDepFields() {
   var p = APP.depEdit, price = parseFloat(p.price) || 0, html = '';
-  var showPrice = (APP.depKind !== 'donate');   // [v1.6 donate] บริจาคไม่โชว์ราคา
+  var showPrice = (APP.depKind !== 'donate') && hasVal(p.price);   // [v1.6 donate] บริจาคไม่โชว์ราคา · [v2.2.0] ไม่มีสิทธิ์ view_value ก็ไม่โชว์
   if (APP.depUnitBased) {
     html += '<div class="dep-fld ' + (APP.depFocus === 'q' ? 'act' : '') + '" onclick="depFocusField(\'q\')"><div class="fl">จำนวน (' + esc(APP.depUnit) + ')</div><div class="fv"><span id="depFvQ">0</span></div></div>';
     html += '<div class="dep-fld ' + (APP.depFocus === 'w' ? 'act' : '') + '" onclick="depFocusField(\'w\')"><div class="fl">น้ำหนัก</div><div class="fv"><span id="depFvW">0</span><span class="u">กก.</span></div></div>';
@@ -2766,7 +2991,7 @@ function selectWithdrawMember(memberId) {
     APP.currentMember = r.data;
     document.getElementById('withdrawMemberInfo').innerHTML =
       '<div class="balance-name">' + esc(r.data.fullName) + '</div><div class="balance-info">' + memberIdentityLine(r.data) + '</div>' +
-      '<div class="balance-label" style="margin-top:8px">ยอดเงินคงเหลือ</div><div class="balance-amount">฿' + r.data.currentBalance.toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>';
+      (hasVal(r.data.currentBalance) ? '<div class="balance-label" style="margin-top:8px">ยอดเงินคงเหลือ</div><div class="balance-amount">' + baht(r.data.currentBalance, 2) + '</div>' : '');   // [v2.2.0]
     document.getElementById('withdrawForm').classList.remove('hidden');
   });
 }
@@ -2849,9 +3074,9 @@ function loadPrices() {
     if (!r.success) return;
     APP.prices = r.data;
     var html = '', currentCat = '';
-    r.data.filter(function(p) { return p.price > 0; }).forEach(function(p) {
+    r.data.filter(function(p) { return (p.hasPrice !== undefined) ? p.hasPrice : (p.price > 0); }).forEach(function(p) {   // [v2.2.0]
       if (p.category !== currentCat) { currentCat = p.category; html += '<div class="category-header">' + esc(p.category) + '</div>'; }
-      html += '<div class="price-item"><span class="price-name">' + esc(p.name) + '</span><span class="price-value">฿' + p.price.toLocaleString() + '<span class="price-unit">/' + esc(p.unit) + '</span></span></div>';
+      html += '<div class="price-item"><span class="price-name">' + esc(p.name) + '</span><span class="price-value">' + (hasVal(p.price) ? p.price.toLocaleString() : '') + '<span class="price-unit">/' + esc(p.unit) + '</span></span></div>';   // [v2.2.0]
     });
     document.getElementById('pricesList').innerHTML = html || '<div style="padding:20px;text-align:center;color:#999">ยังไม่มีรายการราคา</div>';
   });
@@ -3412,9 +3637,9 @@ function loadBalanceReport() {
     var d = r.data;
     var html = '<div class="stats-grid" style="margin-bottom:16px">' +
       '<div class="stat-card"><div class="stat-value">' + d.count + '</div><div class="stat-label">' + PROFILE.subjectWord + 'ที่มียอด</div></div>' +
-      '<div class="stat-card"><div class="stat-value">฿' + (d.totalBalance||0).toLocaleString() + '</div><div class="stat-label">ยอดเงินรวม</div></div>' +
+      (hasVal(d.totalBalance) ? '<div class="stat-card"><div class="stat-value">' + baht(d.totalBalance) + '</div><div class="stat-label">ยอดเงินรวม</div></div>' : '') +
       '<div class="stat-card"><div class="stat-value purple">' + (d.totalPoints||0).toLocaleString() + '</div><div class="stat-label">แต้มรวม</div></div>' +
-      '<div class="stat-card"><div class="stat-value">฿' + (d.avgBalance||0).toLocaleString() + '</div><div class="stat-label">เฉลี่ย/คน</div></div></div>';
+      (hasVal(d.avgBalance) ? '<div class="stat-card"><div class="stat-value">' + baht(d.avgBalance) + '</div><div class="stat-label">เฉลี่ย/คน</div></div>' : '') + '</div>';
     d.members.forEach(function(m) {
       html += '<div class="list-item"><div class="list-content"><div class="list-title">' + esc(m.fullName) + '</div>' +
         '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + ' | ' + esc(m.zone) + '</div></div>' +
