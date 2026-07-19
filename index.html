@@ -791,7 +791,7 @@
           </div>
           <div id="permLegend" class="perm-legend"></div>
           <div id="permTableWrap"><div class="loading"><div class="spinner"></div></div></div>
-          <button class="btn btn-primary" style="width:100%;margin-top:14px" onclick="saveRolePerms(this)">💾 บันทึกการตั้งค่า</button>
+          <button class="btn btn-primary" id="permSaveBtn" style="width:100%;margin-top:14px" onclick="saveRolePerms(this)" disabled>💾 บันทึกตารางสิทธิ์</button>
         </div>
       </div>
     </div>
@@ -1729,6 +1729,9 @@ function setDonateMode(mode) {
 
 function loadRolePerms() {
   _renderDonateToggle();
+  // [v2.1.7 #1] ปิดปุ่มบันทึกทุกครั้งที่เริ่มโหลด — ระหว่างนี้ตารางไม่มีใน DOM
+  //   ถ้ากดได้ saveRolePerms จะอ่านได้ matrix ว่างแล้วล้างสิทธิ์ทั้งระบบ
+  var _sb = document.getElementById('permSaveBtn'); if (_sb) _sb.disabled = true;
   document.getElementById('permTableWrap').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
   callServer('getRolePermissions', {}, function(r) {
     if (!r.success) { document.getElementById('permTableWrap').innerHTML = '<div style="color:#c62828">' + esc(r.message) + '</div>'; return; }
@@ -1766,6 +1769,7 @@ function renderRolePerms() {
 
   document.getElementById('permTableWrap').innerHTML =
     '<table class="perm-table" id="permTable"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
+  var _sb = document.getElementById('permSaveBtn'); if (_sb) _sb.disabled = false;   // [v2.1.7] ตารางพร้อมแล้วค่อยเปิดปุ่ม
 }
 
 function permToggleCol(colIdx) {
@@ -1778,7 +1782,13 @@ function permToggleCol(colIdx) {
 }
 
 function saveRolePerms(btn) {
-  if (!_permData) return;
+  // [v2.1.7 #1] _permData ค้างข้ามการเข้าหน้า แต่ตารางถูกล้างเป็น spinner ทุกครั้ง
+  //   จึงต้องเช็คว่ามีแถวจริงใน DOM ด้วย ไม่ใช่เช็คแค่ _permData
+  var _rows = document.querySelectorAll('#permTable tbody tr.prow');
+  if (!_permData || !_rows.length) {
+    showToast('ตารางสิทธิ์ยังโหลดไม่เสร็จ กรุณารอสักครู่แล้วลองใหม่', 'error');
+    return;
+  }
   var matrix = {};
   _permData.roles.forEach(function(ro) { if (ro.id !== 'admin') matrix[ro.id] = {}; });
   document.querySelectorAll('#permTable tbody tr.prow').forEach(function(row) {
@@ -1791,10 +1801,20 @@ function saveRolePerms(btn) {
     });
   });
   btn.disabled = true;
-  callServer('saveRolePermissions', { matrix: matrix }, function(r) {
+  // [v2.1.8 #3] ส่ง rev ที่ได้ตอนโหลดหน้าไปด้วย — server ใช้ตรวจว่ามีคนอื่นบันทึกแทรกหรือยัง
+  callServer('saveRolePermissions', { matrix: matrix, rev: _permData.rev }, function(r) {
     btn.disabled = false;
-    if (r.success) showToast('บันทึกสิทธิ์แล้ว (' + r.count + ' รายการ)', 'success');
-    else showToast(r.message, 'error');
+    if (!r.success) {
+      showToast(r.message, 'error');
+      // [v2.1.8 #3] ชนกับคนอื่น -> ดึงตารางล่าสุดมาให้เห็นทันที จะได้แก้ซ้ำบนของใหม่ ไม่ใช่ของเก่า
+      if (String(r.message || '').indexOf('ถูกแก้ไขโดยผู้อื่น') !== -1) loadRolePerms();
+      return;
+    }
+    // [v2.1.7 #4] count = จำนวนช่องที่เปลี่ยนจริง (เดิมเป็น 92 คงที่ทุกครั้ง)
+    if (r.rev) _permData.rev = r.rev;   // [v2.1.8] รับ rev ใหม่ บันทึกซ้ำได้โดยไม่ต้องโหลดหน้า
+    showToast(r.count ? ('บันทึกสิทธิ์แล้ว · เปลี่ยน ' + r.count + ' รายการ') : 'ไม่มีการเปลี่ยนแปลง', 'success');
+    // [v2.1.8 #6] เมนูของผู้แก้เองต้องตรงกับสิทธิ์ใหม่ทันที (เดิมมีแต่ setDonateMode ที่เรียก)
+    if (r.count && typeof buildMenu === 'function') buildMenu();
   });
 }
 
