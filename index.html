@@ -1610,8 +1610,10 @@ function getRoleLabel(role) {
 // ═══════════════════════════════════════════════════════════════════════
 function buildMenu() {
   callServer('getMyMenu', {}, function(r) {
-    var items = (r && r.success && r.data) ? r.data.slice() : [];
-    APP.menuPages = {}; items.forEach(function(it) { if (it.page) APP.menuPages[it.page] = 1; });   // [v2.1] ใช้เช็คสิทธิ์ปุ่มลัด
+    var all = (r && r.success && r.data) ? r.data.slice() : [];
+    APP.menuPages = {}; all.forEach(function(it) { if (it.page) APP.menuPages[it.page] = 1; });   // [v2.1] ใช้เช็คสิทธิ์ปุ่มลัด
+    // [v2.1.3] ฟีเจอร์ noMenu (weight_report ฯลฯ) นับเป็นสิทธิ์ แต่ไม่ต้องมีไทล์บนหน้าแรก
+    var items = all.filter(function(it) { return !it.noMenu; });
     items.push({ icon:'🔐', label:'เปลี่ยนรหัสผ่าน', page:'_changePwd' });
     items.push({ icon:'🚪', label:'ออกจากระบบ',     page:'_logout' });
 
@@ -3269,7 +3271,7 @@ function loadDashboard() {
     h += '<div class="stat-card"><div class="stat-value">฿' + (d.totalBalance||0).toLocaleString() + '</div><div class="stat-label">ยอดคงเหลือ</div></div>';
     h += '<div class="stat-card"><div class="stat-value" style="color:var(--points)">' + (d.totalPointsBalance||0).toLocaleString() + '</div><div class="stat-label">แต้ม (x' + mult + ')</div></div>';
     h += '<div class="stat-card"><div class="stat-value">' + (d.totalStock||0).toLocaleString() + ' กก.</div><div class="stat-label">สต็อก</div></div>';
-    // [v2.1.2] ปิดโหมดบริจาคแล้วแต่ยังมียอดสะสมเก่า → คงการ์ดไว้ดูย้อนหลังได้ แต่ทำเป็นสีเทา + ป้าย "หยุดรับ" กันเข้าใจผิดว่ายังรับอยู่
+    // [v2.1.2] ปิดโหมดบริจาคแล้วแต่ยังมียอดสะสมเก่า → คงการ์ดไว้ดูย้อนหลังได้ แต่ทำเป็นสีเทา + ป้าย "หยุดรับ"
     //   แหล่งค่า: donateMode จาก payload ก่อน (สดเสมอ) → PROFILE เป็นตัวสำรอง
     var _donOff = String(d.donateMode || (window.PROFILE && PROFILE.donateMode) || 'all').toLowerCase() === 'off';
     if ((d.donationWeight || 0) > 0) h += '<div class="stat-card"' + (_donOff ? ' title="ปิดรับบริจาคแล้ว — แสดงยอดสะสมย้อนหลัง"' : '') + '><div class="stat-value" style="color:' + (_donOff ? '#9e9e9e' : '#e91e8c') + '">' + d.donationWeight.toLocaleString() + ' กก.</div><div class="stat-label">ขยะบริจาค' + (d.donationCount ? ' (' + d.donationCount + ')' : '') + (_donOff ? ' · หยุดรับ' : '') + '</div></div>';   // [v2.1.1] แสดงเมื่อมียอดเท่านั้น
