@@ -244,7 +244,22 @@
     #loginScreen .wb-btn{width:100%;background:linear-gradient(135deg,#06c755,#00b900);color:#fff;border:none;border-radius:14px;padding:15px;font-size:16px;font-weight:700;cursor:pointer;box-shadow:0 6px 16px rgba(0,176,0,.35);margin-top:4px;font-family:inherit;}
     #loginScreen .wb-btn:active{transform:scale(.98);}
     #loginScreen .wb-foot{text-align:center;font-size:11px;color:#adb5bd;margin-top:24px;line-height:1.7;}
-  </style>
+  
+/* [v2.2.0] preset โหมดชั่งอย่างเดียว */
+.wp-box{border:2px solid var(--border);border-radius:14px;padding:12px;margin-bottom:10px;background:#fafafa}
+.wp-box.on{border-color:var(--primary);background:#f1faf3}
+.wp-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.wp-name{font-size:13px;font-weight:700}
+.wp-sub{font-size:13px;color:#888;margin-top:3px}
+.wp-tog{width:46px;height:26px;border-radius:14px;background:#cfd8dc;position:relative;flex-shrink:0;cursor:pointer}
+.wp-tog.on{background:var(--primary)}
+.wp-knob{width:20px;height:20px;border-radius:12px;background:#fff;position:absolute;top:3px;left:3px}
+.wp-tog.on .wp-knob{left:auto;right:3px}
+.wp-state{display:inline-block;font-size:13px;padding:2px 9px;border-radius:12px;margin-top:8px}
+.wp-state.custom{background:#eceff1;color:#666}
+.wp-state.applied{background:#e8f5e9;color:#1b7a3d}
+.wp-chg{font-size:13px;color:#1b7a3d;margin-top:6px;line-height:1.45}
+</style>
   <div class="wb-wrap">
     <div class="wb-icon"><svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="wbga" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#06c755"/><stop offset="1" stop-color="#00a94f"/></linearGradient></defs><rect width="512" height="512" fill="url(#wbga)"/><path d="M0 0h512v210C380 150 300 250 160 190 90 160 40 200 0 240z" fill="#ffffff" opacity="0.08"/><g transform="translate(256,150)" fill="none" stroke="#c3fae8" stroke-width="16" stroke-linecap="round"><path d="M-34 6 a34 34 0 1 1 46 30"/><path d="M12 42 l14 -6 -4 15 z" fill="#c3fae8" stroke="none"/></g><text x="256" y="360" text-anchor="middle" font-family="Inter,Arial" font-weight="900" font-size="200" fill="#ffffff" letter-spacing="-8">WB</text></svg></div>
     <div class="wb-title">ธนาคารขยะชุมชน</div>
@@ -789,6 +804,7 @@
             </div>
             <div style="font-size:11.5px;color:#a58a2d;margin-top:6px">ใช้เตือนในหน้าขาย + รายงานส่วนต่างน้ำหนัก เมื่อส่วนต่างเกินเกณฑ์นี้ (ค่าเริ่มต้น 3%)</div>
           </div>
+          <div id="weighPreset"></div>
           <div id="permLegend" class="perm-legend"></div>
           <div id="permTableWrap"><div class="loading"><div class="spinner"></div></div></div>
           <button class="btn btn-primary" id="permSaveBtn" style="width:100%;margin-top:14px" onclick="saveRolePerms(this)" disabled>💾 บันทึกตารางสิทธิ์</button>
@@ -1692,6 +1708,13 @@ function _curDonateMode() {
 }
 // [v2.1.4] โหมด "บริจาคทั้งหมด" — ไม่มีการจ่ายเงินให้สมาชิก ราคารับซื้อจึงไม่มีความหมาย
 function _isDonateAll() { return String(_curDonateMode() || '').toLowerCase() === 'donate_all'; }
+// [v2.2.0] ไม่มีสิทธิ์ view_value → backend ส่งช่องเงินมาเป็น null ทุกช่อง ใช้เป็นสัญญาณได้เลย
+//   ไม่ต้องเช็ค role ฝั่ง client ป้องกันสองฝั่งไม่ตรงกัน
+function _noValue() {
+  var ps = (APP && APP.prices) || [];
+  for (var i = 0; i < ps.length; i++) { if (ps[i] && ps[i].price === null) return true; }
+  return false;
+}
 function _donateModeLabel(m) {
   return m === 'off' ? 'ปิด' : m === 'partial' ? 'บางส่วน' : m === 'donate_all' ? 'บริจาคทั้งหมด' : 'เลือกได้';
 }
@@ -1770,6 +1793,76 @@ function renderRolePerms() {
   document.getElementById('permTableWrap').innerHTML =
     '<table class="perm-table" id="permTable"><thead>' + head + '</thead><tbody>' + body + '</tbody></table>';
   var _sb = document.getElementById('permSaveBtn'); if (_sb) _sb.disabled = false;   // [v2.1.7] ตารางพร้อมแล้วค่อยเปิดปุ่ม
+  renderWeighPreset();   // [v2.2.0]
+}
+
+// ═══ [v2.2.0] preset "โหมดชั่งอย่างเดียว" (ใช้สำหรับ Operator) ═══
+//   ตั้งใจไม่แตะ tx_edit (แก้ไข/ยกเลิกรายการ) — ปล่อยให้ admin ตัดสินใจเอง
+//   สถานะคำนวณจากค่าจริงในตาราง ไม่เก็บแยก จึงไม่มีวันบอกไม่ตรงกับความจริง
+var WEIGH_PRESET = {
+  role: 'operator',
+  on:  ['register','member_lookup','history_view','deposit','donate','stock_view','dashboard','my_account'],
+  off: ['withdraw','redeem','prices_view','sell','buyers','view_value','view_sales',
+        'weight_report','price_edit','rewards_manage','balance_report','audit']
+};
+function _wpBoxes() {
+  if (!_permData) return null;
+  var col = -1;
+  _permData.roles.forEach(function(r, i) { if (r.id === WEIGH_PRESET.role) col = i; });
+  if (col < 0) return null;
+  var map = {};
+  document.querySelectorAll('#permTable tbody tr.prow').forEach(function(row) {
+    var inp = row.querySelectorAll('input')[col];
+    if (inp && !inp.disabled) map[row.getAttribute('data-fid')] = inp;
+  });
+  return map;
+}
+function _wpDiff() {
+  var m = _wpBoxes(); if (!m) return null;
+  var off = [];
+  WEIGH_PRESET.on.forEach(function(f)  { if (m[f] && !m[f].checked) off.push(f); });
+  WEIGH_PRESET.off.forEach(function(f) { if (m[f] &&  m[f].checked) off.push(f); });
+  return off;
+}
+function renderWeighPreset() {
+  var el = document.getElementById('weighPreset'); if (!el) return;
+  var diff = _wpDiff();
+  var matched = (diff !== null && diff.length === 0);
+  var names = (diff || []).map(function(f) {
+    var hit = null;
+    _permData.features.forEach(function(x) { if (x.id === f) hit = x.label; });
+    return hit || f;
+  });
+  el.innerHTML =
+    '<div class="wp-box' + (matched ? ' on' : '') + '">' +
+      '<div class="wp-top">' +
+        '<div><div class="wp-name">⚖️ โหมดชั่งอย่างเดียว</div>' +
+            '<div class="wp-sub">ใช้สำหรับ Operator</div></div>' +
+        '<div class="wp-tog' + (matched ? ' on' : '') + '" onclick="applyWeighPreset(' + (matched ? 'false' : 'true') + ')"><div class="wp-knob"></div></div>' +
+      '</div>' +
+      (matched
+        ? '<div class="wp-state applied">ตั้งค่าให้แล้ว</div>'
+        : '<div class="wp-state custom">กำหนดเอง</div>' +
+          (names.length ? '<div class="wp-chg">ติ๊กเพื่อปรับ ' + names.length + ' ช่อง: ' + esc(names.slice(0,6).join(' · ')) +
+                          (names.length > 6 ? ' …' : '') + '</div>' : '')) +
+    '</div>';
+}
+function applyWeighPreset(on) {
+  var m = _wpBoxes(); if (!m) { showToast('ตารางยังโหลดไม่เสร็จ', 'error'); return; }
+  var n = 0;
+  if (on) {
+    WEIGH_PRESET.on.forEach(function(f)  { if (m[f] && !m[f].checked) { m[f].checked = true;  n++; } });
+    WEIGH_PRESET.off.forEach(function(f) { if (m[f] &&  m[f].checked) { m[f].checked = false; n++; } });
+    showToast(n ? ('ตั้งค่าให้แล้ว ' + n + ' ช่อง — กดบันทึกเพื่อยืนยัน') : 'ตรงกับชุดนี้อยู่แล้ว', 'success');
+  } else {
+    // ถอนติ๊ก = คืนค่าที่โหลดมาจาก server (ยังไม่บันทึก) ไม่ใช่เดาค่าเริ่มต้นเอง
+    Object.keys(m).forEach(function(f) {
+      var was = !!(_permData.matrix[WEIGH_PRESET.role] && _permData.matrix[WEIGH_PRESET.role][f]);
+      if (m[f].checked !== was) { m[f].checked = was; n++; }
+    });
+    showToast(n ? ('คืนค่าเดิม ' + n + ' ช่อง') : 'ไม่มีอะไรต้องคืน', 'success');
+  }
+  renderWeighPreset();
 }
 
 function permToggleCol(colIdx) {
@@ -1779,6 +1872,7 @@ function permToggleCol(colIdx) {
   });
   var allOn = boxes.every(function(b) { return b.checked; });
   boxes.forEach(function(b) { b.checked = !allOn; });
+  renderWeighPreset();   // [v2.2.0] แตะคอลัมน์แล้วสถานะ preset ต้องอัปเดตตาม
 }
 
 function saveRolePerms(btn) {
@@ -2260,9 +2354,12 @@ function showBalance(memberId) {
     document.getElementById('balanceDisplay').innerHTML =
       '<div class="balance-card"><div class="balance-name">' + esc(m.fullName) + '</div>' +
       '<div class="balance-info">' + memberIdentityLine(m) + '</div>' +
-      '<div class="balance-label" style="margin-top:12px">ยอดเงินคงเหลือ</div>' +
-      '<div class="balance-amount">฿' + (m.currentBalance||0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
-      '<div style="display:flex;justify-content:space-between;font-size:13px;opacity:0.9"><span>ฝากสะสม ฿' + (m.totalDeposit||0).toLocaleString() + '</span><span>ถอนสะสม ฿' + (m.totalWithdraw||0).toLocaleString() + '</span></div></div>' +
+      // [v2.2.0] ไม่มีสิทธิ์ดูมูลค่า → ตัดก้อนเงินทิ้งทั้งก้อน เหลือแต้ม/CO2
+      (m.currentBalance === null ? '' :
+        '<div class="balance-label" style="margin-top:12px">ยอดเงินคงเหลือ</div>' +
+        '<div class="balance-amount">฿' + (m.currentBalance||0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>') +
+      (m.currentBalance === null ? '' :
+  '<div style="display:flex;justify-content:space-between;font-size:13px;opacity:0.9"><span>ฝากสะสม ฿' + (m.totalDeposit||0).toLocaleString() + '</span><span>ถอนสะสม ฿' + (m.totalWithdraw||0).toLocaleString() + '</span></div></div>') +
       '<div class="points-card"><div class="balance-label">แต้มคงเหลือ</div>' +
       '<div class="points-amount">' + (m.pointsBalance||0).toLocaleString() + ' แต้ม</div>' +
       '<div style="font-size:12px;opacity:0.85">ได้สะสม ' + (m.totalPointsEarned||0).toLocaleString() + ' | ใช้ไป ' + (m.totalPointsUsed||0).toLocaleString() + '</div></div>';
@@ -2287,7 +2384,9 @@ function showHistory(memberId) {
     APP._txActions = {};            // สิทธิ์ต่อรายการ ให้ txMenu อ่าน
     var html = '<div class="balance-card"><div class="balance-name">' + esc(s?s.fullName:'') + '</div>' +
       '<div class="balance-info">' + (s?memberIdentityLine(s):'') + '</div>' +
-      '<div class="balance-amount">฿' + (s?s.currentBalance:0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>' +
+      // [v2.2.0] ซ่อนยอดเงินหัวการ์ดเมื่อถูก mask
+      ((s && s.currentBalance === null) ? '' :
+        '<div class="balance-amount">฿' + (s?s.currentBalance:0).toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>') +
       '<div style="font-size:13px;opacity:0.9">แต้มคงเหลือ: ' + (s?s.pointsBalance:0).toLocaleString() + '</div></div>';
     html += '<div class="card"><div class="card-title">📋 ประวัติธุรกรรม</div>';
     if (r.data.length === 0) { html += '<div style="padding:20px;text-align:center;color:#999">ยังไม่มีประวัติ</div>'; }
@@ -2324,7 +2423,9 @@ function showHistory(memberId) {
         html += '<div class="list-item"><div class="list-icon">' + icon + '</div><div class="list-content">' +
           '<div class="list-title">' + t.type + (t.wasteType !== '-' ? ': ' + esc(t.wasteType) : '') + tag + '</div>' +
           '<div class="list-subtitle">' + t.createdAt + qtyInfo + pts + '</div></div>' +
-          '<div class="list-value ' + cls + '">' + sign + '฿' + Math.abs(amt).toLocaleString() + '</div>' + menuBtn + '</div>';
+          // [v2.2.0] amount === null = ถูก mask → ตัดช่องเงินออก เหลือประเภท/น้ำหนัก/แต้ม
+          (t.amount === null ? '' :
+            '<div class="list-value ' + cls + '">' + sign + '฿' + Math.abs(amt).toLocaleString() + '</div>') + menuBtn + '</div>';
       });
     }
     html += '</div>';
@@ -2490,7 +2591,9 @@ function selectDepositMember(memberId) {
     APP.currentMember = r.data;
     document.getElementById('depositMemberInfo').innerHTML =
       '<div class="balance-name">' + esc(r.data.fullName) + '</div>' +
-      '<div class="balance-info">' + memberIdentityLine(r.data) + ' · ยอดปัจจุบัน ฿' + r.data.currentBalance.toLocaleString() + '</div>';
+      // [v2.2.0] currentBalance === null = ถูก mask → เหลือแค่ตัวตนสมาชิก
+      '<div class="balance-info">' + memberIdentityLine(r.data) +
+        (r.data.currentBalance === null ? '' : (' · ยอดปัจจุบัน ฿' + r.data.currentBalance.toLocaleString())) + '</div>';
     document.getElementById('depositForm').classList.remove('hidden');
     APP.depositCart = [];
     APP.depFilter = 0;
@@ -2543,15 +2646,18 @@ function renderDepCatalog() {
     var isDon = !!p.donateOnly;   // [v1.8] บริจาคเท่านั้น
     var forceDon = isDon || (dmode === 'donate_all');   // [v2.0] บริจาคทั้งหมด
     var unit = String(p.unit || 'กก.');
+    // [v2.2.0] price === null = ถูก mask จาก backend → แสดงหน่วยแทน ไม่ใช่ "ยังไม่ตั้งราคา" ที่ทำให้เข้าใจผิด
     var priceHTML = forceDon
       ? '<div class="dep-pr" style="color:#c0186f;font-weight:700">❤️ บริจาค</div>'
-      : (hasPrice
-        ? '<div class="dep-pr">' + p.price + '<span> ฿/' + esc(unit) + '</span></div>'
-        : '<div class="dep-pr unset">ยังไม่ตั้งราคา</div>');
+      : (p.price === null
+        ? '<div class="dep-pr" style="color:var(--text-light)">' + esc(unit) + '</div>'
+        : (hasPrice
+          ? '<div class="dep-pr">' + p.price + '<span> ฿/' + esc(unit) + '</span></div>'
+          : '<div class="dep-pr unset">ยังไม่ตั้งราคา</div>'));
     var badge = inCart ? '<div class="dep-badge">' + esc(depItemQtyLabel(inCart)) + '</div>' : '';
     var cnt = stats[p.name] || 0;
     var hot = (cnt > 0 && cnt === maxCount && !q && !APP.depFilter) ? '<div class="dep-hot">ใช้บ่อย</div>' : '';
-    return '<div class="dep-card ' + (inCart ? 'picked' : '') + ((hasPrice || forceDon) ? '' : ' noprice') + '" onclick="openDepKeypad(\'' + esc(p.code) + '\')">' +
+    return '<div class="dep-card ' + (inCart ? 'picked' : '') + ((hasPrice || forceDon || p.price === null) ? '' : ' noprice') + '" onclick="openDepKeypad(\'' + esc(p.code) + '\')">' +
       badge + hot +
       depThumb(p) +
       '<div class="dep-nm">' + esc(p.name) + '</div>' +
@@ -2630,7 +2736,8 @@ function setDepKind(k) {
 
 function renderDepFields() {
   var p = APP.depEdit, price = parseFloat(p.price) || 0, html = '';
-  var showPrice = (APP.depKind !== 'donate');   // [v1.6 donate] บริจาคไม่โชว์ราคา
+  // [v2.2.0] เพิ่มเงื่อนไข price !== null — ไม่มีสิทธิ์ view_value จะไม่มีช่องราคาและช่องเป็นเงิน
+  var showPrice = (APP.depKind !== 'donate') && (p.price !== null);
   if (APP.depUnitBased) {
     html += '<div class="dep-fld ' + (APP.depFocus === 'q' ? 'act' : '') + '" onclick="depFocusField(\'q\')"><div class="fl">จำนวน (' + esc(APP.depUnit) + ')</div><div class="fv"><span id="depFvQ">0</span></div></div>';
     html += '<div class="dep-fld ' + (APP.depFocus === 'w' ? 'act' : '') + '" onclick="depFocusField(\'w\')"><div class="fl">น้ำหนัก</div><div class="fv"><span id="depFvW">0</span><span class="u">กก.</span></div></div>';
@@ -2673,6 +2780,11 @@ function updateDepKeypad() {
   if (APP.depKind === 'donate') {
     document.getElementById('depKAmt').textContent = '❤️ บริจาค';
     document.getElementById('depKCo2').textContent = '';
+  } else if (p.price === null) {
+    // [v2.2.0] ไม่มีสิทธิ์ดูมูลค่า → ช่องยอดเงินกลายเป็นน้ำหนัก
+    document.getElementById('depKAmt').textContent = (APP.depUnitBased ? w : w) + ' กก.';
+    var _c = parseFloat(p.multiply) || 0;
+    document.getElementById('depKCo2').textContent = (_c > 0 && w > 0) ? ('🌱 ลด CO₂ ' + (Math.round(_c * w * 100) / 100) + ' กก.') : '';
   } else {
     var amount = APP.depUnitBased ? (q * price) : (w * price);
     document.getElementById('depKAmt').textContent = depMoney(amount);
@@ -2715,23 +2827,32 @@ function renderDepCart() {
         return '<div class="dep-crow"><span class="cn">❤️ ' + esc(c.name) + '</span><span class="cw">' + sub + '</span>' +
           '<span class="cp" style="color:#e91e8c">บริจาค</span><span class="cx" onclick="removeDepCartItem(' + i + ')">✕</span></div>';
       }
+      // [v2.2.0] ราคาถูก mask → เหลือชื่อ + น้ำหนัก ไม่มี "× ราคา" และไม่มีช่องเงิน
+      if (c.price === null) {
+        return '<div class="dep-crow"><span class="cn">' + esc(c.name) + '</span><span class="cw">' + sub + '</span>' +
+          '<span class="cx" onclick="removeDepCartItem(' + i + ')">✕</span></div>';
+      }
       var amount = (unitBased ? c.qty : c.weight) * c.price;
       return '<div class="dep-crow"><span class="cn">' + esc(c.name) + '</span><span class="cw">' + sub + ' × ' + c.price + '</span>' +
         '<span class="cp">' + depMoney(amount) + '</span><span class="cx" onclick="removeDepCartItem(' + i + ')">✕</span></div>';
     }).join('');
   }
-  var total = 0, co2 = 0, donW = 0, donCnt = 0;
+  var total = 0, co2 = 0, donW = 0, donCnt = 0, allW = 0, noVal = false;
   cart.forEach(function(c) {
     var unitBased = (c.unit !== 'กก.' && c.unitWeight > 0);
+    allW += (c.weight || 0);
+    if (c.price === null) noVal = true;   // [v2.2.0]
     if (c.kind === 'donate') { donW += c.weight; donCnt++; return; }
-    total += (unitBased ? c.qty : c.weight) * c.price;
+    total += (unitBased ? c.qty : c.weight) * (c.price || 0);
     if (c.multiply > 0) co2 += c.multiply * c.weight;
   });
   // [v2.1.4] ตะกร้าเป็นบริจาคล้วน (รวมกรณีโหมดบริจาคทั้งหมด) -> ไม่โชว์ "฿ 0" ที่ไม่มีความหมาย
   var _allDon = (cart.length > 0 && donCnt === cart.length);
   document.getElementById('depTotal').textContent = _allDon
     ? ('❤️ บริจาค ' + (Math.round(donW * 100) / 100) + ' กก.')
-    : depMoney(total) + (donCnt ? (' · ❤️ ' + (Math.round(donW * 100) / 100) + ' กก.') : '');
+    : (noVal   // [v2.2.0] ไม่มีสิทธิ์ดูมูลค่า → ตัวเลขเด่นเป็นน้ำหนักรวม
+        ? ((Math.round(allW * 100) / 100) + ' กก.')
+        : depMoney(total) + (donCnt ? (' · ❤️ ' + (Math.round(donW * 100) / 100) + ' กก.') : ''));
   document.getElementById('depCnt').textContent = cart.length + ' รายการ';
   document.getElementById('depCo2').textContent = co2 > 0 ? ('🌱 ลด CO₂ ' + (Math.round(co2 * 10) / 10) + ' กก.') : '';
   var btn = document.getElementById('depSaveBtn');
@@ -3302,8 +3423,11 @@ function loadDashboard() {
 
     h += '<div class="dash-g6">';
     h += '<div class="stat-card"><div class="stat-value">' + d.totalMembers + '</div><div class="stat-label">ครัวเรือน</div></div>';
+    // [v2.2.0] ไม่มีสิทธิ์ดูมูลค่า → การ์ดเงินหายทั้งคู่ เหลือ ครัวเรือน/แต้ม/สต็อก
+    if (d.totalDeposit !== null) {
     h += '<div class="stat-card"><div class="stat-value">฿' + (d.totalDeposit||0).toLocaleString() + '</div><div class="stat-label">ฝากสะสม</div></div>';
     h += '<div class="stat-card"><div class="stat-value">฿' + (d.totalBalance||0).toLocaleString() + '</div><div class="stat-label">ยอดคงเหลือ</div></div>';
+    }
     h += '<div class="stat-card"><div class="stat-value" style="color:var(--points)">' + (d.totalPointsBalance||0).toLocaleString() + '</div><div class="stat-label">แต้ม (x' + mult + ')</div></div>';
     h += '<div class="stat-card"><div class="stat-value">' + (d.totalStock||0).toLocaleString() + ' กก.</div><div class="stat-label">สต็อก</div></div>';
     // [v2.1.2] ปิดโหมดบริจาคแล้วแต่ยังมียอดสะสมเก่า → คงการ์ดไว้ดูย้อนหลังได้ แต่ทำเป็นสีเทา + ป้าย "หยุดรับ"
@@ -3320,6 +3444,8 @@ function loadDashboard() {
     var _dnAll = String(d.donateMode || (window.PROFILE && PROFILE.donateMode) || '').toLowerCase() === 'donate_all';
     var _hideDep = _dnAll && !((d.totalDeposit || 0) > 0);
     var _hideCost = _dnAll && !((d.totalStockValue || 0) > 0);
+    var _noVal = (d.totalBalance === null);   // [v2.2.0] ไม่มีสิทธิ์ดูมูลค่า = ทั้งกล่องไม่มีความหมาย
+    if (!_noVal) {
     h += '<div class="card"><div class="card-title">บัญชีการเงิน</div>';
     if (_dnAll) h += '<div style="font-size:12px;color:#c0186f;background:#fff0f7;border-radius:8px;padding:7px 10px;margin-bottom:6px">❤️ โหมดบริจาคทั้งหมด — ไม่มีการจ่ายเงินให้สมาชิก</div>';
     if (!_hideDep) h += '<div class="dash-fin"><span style="color:var(--text-light)">รายรับจากฝาก</span><span style="color:var(--success);font-weight:600">+฿' + (d.totalDeposit||0).toLocaleString() + '</span></div>';
@@ -3332,6 +3458,7 @@ function loadDashboard() {
     h += '<div class="dash-fin"><span style="color:var(--text-light)">กำไรสุทธิ</span><span style="color:var(--success);font-weight:700;font-size:15px">฿' + (d.totalProfit||0).toLocaleString() + '</span></div>';
     }
     h += '</div>';
+    }   // [v2.2.0] ปิด if (!_noVal)
 
     h += '<div class="card"><div class="card-title">สต็อกวัสดุ</div>';
     var maxW = 1;
@@ -3342,7 +3469,9 @@ function loadDashboard() {
       h += '<div class="dash-bar-bg"><div class="dash-bar-fill" style="width:'+pct+'%;background:'+catColors[i%catColors.length]+'"></div></div>';
       h += '<span style="min-width:55px;text-align:right;font-weight:600">' + c.totalWeight.toLocaleString() + ' กก.</span></div>';
     });
-    h += '<div style="margin-top:6px;font-size:11px;color:var(--text-light)">รวม ' + (d.totalStock||0).toLocaleString() + ' กก. / มูลค่า ฿' + (d.totalStockValue||0).toLocaleString() + '</div>';
+    // [v2.2.0] ตัดครึ่งหลัง "/ มูลค่า ฿..." เมื่อถูก mask
+    h += '<div style="margin-top:6px;font-size:11px;color:var(--text-light)">รวม ' + (d.totalStock||0).toLocaleString() + ' กก.' +
+         (d.totalStockValue === null ? '' : (' / มูลค่า ฿' + (d.totalStockValue||0).toLocaleString())) + '</div>';
     h += '</div>';
 
     h += '<div class="card"><div class="card-title">แต้มและของรางวัล</div>';
