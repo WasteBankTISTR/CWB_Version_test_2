@@ -1137,10 +1137,10 @@ function dsRender(d) {
         var _u = depUnitOf(it.wasteType), _priceCell, _qtyCell;
         if (_u !== 'กก.' && it.price) {
           var _q = Math.round((it.amount || 0) / it.price * 100) / 100;
-          _priceCell = '฿' + (it.price || 0) + '/' + esc(_u);
+          _priceCell = ((parseFloat(it.price) || 0) > 0) ? ('฿' + (it.price || 0) + '/' + esc(_u)) : '❤️ บริจาค';   // [v2.1.4]
           _qtyCell = _q + ' ' + esc(_u) + ' <span style="color:#9ca3af">(' + (it.weight || 0).toFixed(2) + ' กก.)</span>';
         } else {
-          _priceCell = '฿' + (it.price || 0) + '/กก.';
+          _priceCell = ((parseFloat(it.price) || 0) > 0) ? ('฿' + (it.price || 0) + '/กก.') : '❤️ บริจาค';   // [v2.1.4]
           _qtyCell = (it.weight || 0).toFixed(2) + ' กก.';
         }
         html += '<tr><td style="padding:3px 0">' + esc(it.wasteType) + '</td><td style="text-align:right;color:#6b7280;white-space:nowrap">' + _priceCell + '</td><td style="text-align:right;width:118px">' + _qtyCell + '</td><td style="text-align:right;width:84px;font-weight:bold">฿' + (it.amount || 0).toFixed(2) + '</td></tr>';
@@ -1690,6 +1690,8 @@ function _curDonateMode() {
   if (window.PROFILE && PROFILE.donateMode) return PROFILE.donateMode;
   return (window.PROFILE && PROFILE.enableDonate) ? 'all' : 'off';
 }
+// [v2.1.4] โหมด "บริจาคทั้งหมด" — ไม่มีการจ่ายเงินให้สมาชิก ราคารับซื้อจึงไม่มีความหมาย
+function _isDonateAll() { return String(_curDonateMode() || '').toLowerCase() === 'donate_all'; }
 function _donateModeLabel(m) {
   return m === 'off' ? 'ปิด' : m === 'partial' ? 'บางส่วน' : m === 'donate_all' ? 'บริจาคทั้งหมด' : 'เลือกได้';
 }
@@ -2705,7 +2707,11 @@ function renderDepCart() {
     total += (unitBased ? c.qty : c.weight) * c.price;
     if (c.multiply > 0) co2 += c.multiply * c.weight;
   });
-  document.getElementById('depTotal').textContent = depMoney(total) + (donCnt ? (' · ❤️ ' + (Math.round(donW * 100) / 100) + ' กก.') : '');
+  // [v2.1.4] ตะกร้าเป็นบริจาคล้วน (รวมกรณีโหมดบริจาคทั้งหมด) -> ไม่โชว์ "฿ 0" ที่ไม่มีความหมาย
+  var _allDon = (cart.length > 0 && donCnt === cart.length);
+  document.getElementById('depTotal').textContent = _allDon
+    ? ('❤️ บริจาค ' + (Math.round(donW * 100) / 100) + ' กก.')
+    : depMoney(total) + (donCnt ? (' · ❤️ ' + (Math.round(donW * 100) / 100) + ' กก.') : '');
   document.getElementById('depCnt').textContent = cart.length + ' รายการ';
   document.getElementById('depCo2').textContent = co2 > 0 ? ('🌱 ลด CO₂ ' + (Math.round(co2 * 10) / 10) + ' กก.') : '';
   var btn = document.getElementById('depSaveBtn');
@@ -2850,10 +2856,17 @@ function loadPrices() {
   callServer('getAllPrices', {}, function(r) {
     if (!r.success) return;
     APP.prices = r.data;
+    // [v2.1.4] โหมดบริจาคทั้งหมด: ไม่จ่ายเงิน จึงแสดงเฉพาะหมวด + ชื่อประเภท ไม่มีคอลัมน์ราคา
+    var _dnAll = _isDonateAll();
+    var _ttl = document.querySelector('#pricesPage .card-title span');
+    if (_ttl) _ttl.textContent = _dnAll ? '❤️ ประเภทที่รับบริจาค' : '💵 ราคารับซื้อ';
     var html = '', currentCat = '';
-    r.data.filter(function(p) { return p.price > 0; }).forEach(function(p) {
+    if (_dnAll) html += '<div style="background:#fff0f7;border-left:4px solid #c0186f;border-radius:0 9px 9px 0;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#a0165c;line-height:1.5">ตอนนี้เปิดโหมด <b>บริจาคทั้งหมด</b> — รับขยะเข้าคลังโดยไม่จ่ายเงินและไม่ให้แต้ม จึงไม่แสดงราคารับซื้อ</div>';
+    r.data.filter(function(p) { return _dnAll ? true : p.price > 0; }).forEach(function(p) {
       if (p.category !== currentCat) { currentCat = p.category; html += '<div class="category-header">' + esc(p.category) + '</div>'; }
-      html += '<div class="price-item"><span class="price-name">' + esc(p.name) + '</span><span class="price-value">฿' + p.price.toLocaleString() + '<span class="price-unit">/' + esc(p.unit) + '</span></span></div>';
+      html += _dnAll
+        ? '<div class="price-item"><span class="price-name">' + esc(p.name) + '</span><span class="price-value" style="color:#c0186f;font-size:13px">❤️ บริจาค</span></div>'
+        : '<div class="price-item"><span class="price-name">' + esc(p.name) + '</span><span class="price-value">฿' + p.price.toLocaleString() + '<span class="price-unit">/' + esc(p.unit) + '</span></span></div>';
     });
     document.getElementById('pricesList').innerHTML = html || '<div style="padding:20px;text-align:center;color:#999">ยังไม่มีรายการราคา</div>';
   });
@@ -2883,6 +2896,8 @@ function loadPricesForUpdate() {
         '<span id="pDon_' + idx + '" style="display:' + (isDon ? 'inline-flex' : 'none') + ';font-size:11px;color:#c0186f;background:#fdeef6;border:1px solid #f6cfe3;border-radius:8px;padding:6px 9px;font-weight:700">บริจาคเท่านั้น</span>' +
         '</div>';
     });
+    // [v2.1.4] คงหน้าไว้ให้ตั้งราคาเผื่อสลับโหมดกลับ แต่บอกให้ชัดว่าตอนนี้ยังไม่ถูกใช้
+    if (_isDonateAll()) html = '<div style="background:#fff0f7;border-left:4px solid #c0186f;border-radius:0 9px 9px 0;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#a0165c;line-height:1.5">ตอนนี้เปิดโหมด <b>บริจาคทั้งหมด</b> ราคาที่ตั้งไว้<b>ยังไม่ถูกใช้งาน</b> — ตั้งเก็บไว้ล่วงหน้าได้ จะมีผลเมื่อสลับกลับเป็นโหมดรับซื้อ</div>' + html;
     document.getElementById('updatePriceList').innerHTML = html;
     document.getElementById('savePricesBtn').classList.remove('hidden');
   });
@@ -3280,14 +3295,20 @@ function loadDashboard() {
 
     h += '<div class="dash-g3">';
 
+    // [v2.1.4] โหมดบริจาคทั้งหมด: "รายรับจากฝาก"/"ต้นทุนรับซื้อ" เป็น 0 ถาวร จึงซ่อน
+    //   แต่ถ้าเคยเปิดโหมดปกติมาก่อนและยังมียอดสะสมเก่า ต้องแสดงต่อ (บทเรียนเดียวกับการ์ดขยะบริจาค v2.1.2)
+    var _dnAll = String(d.donateMode || (window.PROFILE && PROFILE.donateMode) || '').toLowerCase() === 'donate_all';
+    var _hideDep = _dnAll && !((d.totalDeposit || 0) > 0);
+    var _hideCost = _dnAll && !((d.totalStockValue || 0) > 0);
     h += '<div class="card"><div class="card-title">บัญชีการเงิน</div>';
-    h += '<div class="dash-fin"><span style="color:var(--text-light)">รายรับจากฝาก</span><span style="color:var(--success);font-weight:600">+฿' + (d.totalDeposit||0).toLocaleString() + '</span></div>';
+    if (_dnAll) h += '<div style="font-size:12px;color:#c0186f;background:#fff0f7;border-radius:8px;padding:7px 10px;margin-bottom:6px">❤️ โหมดบริจาคทั้งหมด — ไม่มีการจ่ายเงินให้สมาชิก</div>';
+    if (!_hideDep) h += '<div class="dash-fin"><span style="color:var(--text-light)">รายรับจากฝาก</span><span style="color:var(--success);font-weight:600">+฿' + (d.totalDeposit||0).toLocaleString() + '</span></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">จ่ายถอนเงิน</span><span style="color:var(--danger);font-weight:600">-฿' + (d.totalWithdraw||0).toLocaleString() + '</span></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">ยอดค้างจ่าย</span><span style="font-weight:600">฿' + (d.totalBalance||0).toLocaleString() + '</span></div>';
     if (_showSales) {
     h += '<div style="border-top:2px solid var(--border);margin:4px 0"></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">รายได้จากขาย</span><span style="color:var(--success);font-weight:600">+฿' + (d.totalSales||0).toLocaleString() + '</span></div>';
-    h += '<div class="dash-fin"><span style="color:var(--text-light)">ต้นทุนรับซื้อ</span><span style="color:var(--danger);font-weight:600">-฿' + (d.totalStockValue||0).toLocaleString() + '</span></div>';
+    if (!_hideCost) h += '<div class="dash-fin"><span style="color:var(--text-light)">ต้นทุนรับซื้อ</span><span style="color:var(--danger);font-weight:600">-฿' + (d.totalStockValue||0).toLocaleString() + '</span></div>';
     h += '<div class="dash-fin"><span style="color:var(--text-light)">กำไรสุทธิ</span><span style="color:var(--success);font-weight:700;font-size:15px">฿' + (d.totalProfit||0).toLocaleString() + '</span></div>';
     }
     h += '</div>';
