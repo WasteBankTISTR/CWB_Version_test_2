@@ -3022,19 +3022,25 @@ function loadPrices() {
 function loadPricesForUpdate() {
   callServer('getAllPrices', {}, function(r) {
     if (!r.success) return;
+    // [v2.2.3] ปิดรับบริจาค (DONATE_MODE=off) → ตัวเลือก "ราคา / บริจาค" ไม่มีความหมาย เหลือช่องใส่ราคาอย่างเดียว
+    var _dmOff = String(_curDonateMode() || '').toLowerCase() === 'off';
     var html = '', currentCat = '';
     r.data.forEach(function(p, idx) {
       if (p.category !== currentCat) { currentCat = p.category; html += '<div class="category-header">' + esc(p.category) + '</div>'; }
       var unit = p.unit || 'กก.';
-      var isDon = !!p.donateOnly;
+      //   [สำคัญ] แยก "ค่าที่เก็บจริง" กับ "สิ่งที่แสดง" ออกจากกัน
+      //   saveMultiplePrices อ่าน donateOnly จาก data-donate ของแถว ถ้าใช้ค่าที่แสดง (false)
+      //   การกดบันทึกจะล้างคอลัมน์ DONATE_ONLY ทิ้งทั้งหมด พอเปิดรับบริจาคอีกครั้งจะหายเกลี้ยง
+      var isDonReal = !!p.donateOnly;                 // ค่าจริงในชีต — ใช้ตอนบันทึก ห้ามแตะ
+      var isDon = _dmOff ? false : isDonReal;         // ค่าที่แสดง — ปิดรับบริจาคแล้วให้ดูเป็นรายการราคาปกติ
       var uwField = (unit !== 'กก.')
         ? '<input type="text" inputmode="decimal" class="form-input price-uw-input" data-name="' + esc(p.name) + '" value="' + (p.unitWeight || '') + '" placeholder="กก./' + esc(unit) + '" title="น้ำหนัก (กก.) ต่อ 1 ' + esc(unit) + '" style="width:62px;padding:8px"><span style="font-size:11px;color:#999">กก./' + esc(unit) + '</span>'
         : '';
-      var toggle = '<div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden">' +
+      var toggle = _dmOff ? '' : ('<div style="display:flex;border:1.5px solid #e0e0e0;border-radius:8px;overflow:hidden">' +
         '<span id="pmP_' + idx + '" onclick="setPriceMode(' + idx + ',\'price\')" style="font-size:10.5px;padding:5px 9px;font-weight:700;cursor:pointer;' + (isDon ? 'color:#888' : 'background:#9C27B0;color:#fff') + '">ราคา</span>' +
         '<span id="pmD_' + idx + '" onclick="setPriceMode(' + idx + ',\'donate\')" style="font-size:10.5px;padding:5px 9px;font-weight:700;cursor:pointer;border-left:1.5px solid #e0e0e0;' + (isDon ? 'background:#e91e8c;color:#fff' : 'color:#888') + '">บริจาค</span>' +
-        '</div>';
-      html += '<div id="prow_' + idx + '" data-name="' + esc(p.name) + '" data-donate="' + (isDon ? '1' : '0') + '" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap">' +
+        '</div>');
+      html += '<div id="prow_' + idx + '" data-name="' + esc(p.name) + '" data-donate="' + (isDonReal ? '1' : '0') + '" style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #f0f0f0;flex-wrap:wrap">' +
         '<span style="flex:1;min-width:80px;font-size:13px">' + esc(p.name) + '</span>' + toggle +
         '<span id="pPrice_' + idx + '" style="display:' + (isDon ? 'none' : 'inline-flex') + ';align-items:center;gap:6px">' +
           '<input type="text" inputmode="decimal" class="form-input price-edit-input" data-name="' + esc(p.name) + '" value="' + p.price + '" style="width:72px;padding:8px">' +
@@ -3043,6 +3049,8 @@ function loadPricesForUpdate() {
         '<span id="pDon_' + idx + '" style="display:' + (isDon ? 'inline-flex' : 'none') + ';font-size:11px;color:#c0186f;background:#fdeef6;border:1px solid #f6cfe3;border-radius:8px;padding:6px 9px;font-weight:700">บริจาคเท่านั้น</span>' +
         '</div>';
     });
+    // [v2.2.3] ปิดรับบริจาค — บอกว่าทำไมไม่มีตัวเลือกบริจาคให้เห็น
+    if (_dmOff) html = '<div style="background:#f1f5f9;border-left:4px solid #94a3b8;border-radius:0 9px 9px 0;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#475569;line-height:1.5">ปิดรับบริจาคอยู่ — ตั้งได้เฉพาะราคารับซื้อ (เปลี่ยนโหมดได้ที่หน้าจัดการสิทธิ์)</div>' + html;
     // [v2.1.4] คงหน้าไว้ให้ตั้งราคาเผื่อสลับโหมดกลับ แต่บอกให้ชัดว่าตอนนี้ยังไม่ถูกใช้
     if (_isDonateAll()) html = '<div style="background:#fff0f7;border-left:4px solid #c0186f;border-radius:0 9px 9px 0;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#a0165c;line-height:1.5">ตอนนี้เปิดโหมด <b>บริจาคทั้งหมด</b> ราคาที่ตั้งไว้<b>ยังไม่ถูกใช้งาน</b> — ตั้งเก็บไว้ล่วงหน้าได้ จะมีผลเมื่อสลับกลับเป็นโหมดรับซื้อ</div>' + html;
     document.getElementById('updatePriceList').innerHTML = html;
