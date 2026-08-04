@@ -310,7 +310,7 @@
             <div class="form-group"><label class="form-label"><span class="cfg-idLabel"></span></label><input type="text" id="regHouseNo" class="form-input" placeholder="" data-ph-key="idPlaceholder"></div>
           </div>
           <div class="form-row">
-            <div class="form-group"><label class="form-label">คำนำหน้า</label><select id="regPrefix" class="form-select"><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option><option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option></select></div>
+            <div class="form-group"><label class="form-label">คำนำหน้า</label><select id="regPrefix" class="form-select"><option value="">— ไม่ระบุ —</option><option value="นาย">นาย</option><option value="นาง">นาง</option><option value="นางสาว">นางสาว</option><option value="ด.ช.">ด.ช.</option><option value="ด.ญ.">ด.ญ.</option><option value="ครู">ครู</option><option value="อาจารย์">อาจารย์</option></select></div>
             <div class="form-group"><label class="form-label"><span class="cfg-groupLabel"></span></label><select id="regZone" class="form-select" onchange="onRegZoneChange()"></select></div>
           </div>
           <div class="form-row">
@@ -644,7 +644,7 @@
       <div class="main">
         <button class="back-btn" onclick="showPage('homePage')">← กลับ</button>
         <div class="card">
-          <div class="card-title" style="justify-content:space-between"><span>📊 Dashboard</span><span style="display:flex;gap:6px;align-items:center"><button onclick="openExportData()" class="btn-refresh" title="ส่งออกข้อมูล" style="width:auto;padding:4px 10px;font-size:14px;font-weight:700;line-height:1">📤 ส่งออก</button><button onclick="refreshDashboard()" class="btn-refresh">🔄</button></span></div>
+          <div class="card-title" style="justify-content:space-between"><span>📊 Dashboard</span><span style="display:flex;gap:6px;align-items:center"><button id="exportDataBtn" onclick="openExportData()" class="btn-refresh" title="ส่งออกข้อมูล" style="width:auto;padding:4px 10px;font-size:14px;font-weight:700;line-height:1">📤 ส่งออก</button><button onclick="refreshDashboard()" class="btn-refresh">🔄</button></span></div>
           <div id="dashboardContent" class="loading"><div class="spinner"></div></div>
         </div>
       </div>
@@ -839,9 +839,20 @@
 // ════════════════════════════════════════════════════════════════════════
 
 // 🔧 วาง URL /exec ของคุณตรงนี้ (เส้นเดียวกับที่ใช้ทดสอบใน test.html)
-var API_URL = "https://script.google.com/macros/s/AKfycbwTxWelhNUmO8xQrsfxv5YAMU4HN73MTPBieSlN2EhDh8hOgUh_q3mL2chWTrlKFrrKhA/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbwqRc4JpG67QQI5gURrzPhvkB-sFQ_ebsJaGRsC2_ayQxvGQnK8L022Slcq7zCgqMDrRg/exec";
 
-function apiFetch(action, data) {
+// [v2.5.2] รหัสประจำไซต์จาก deployment id ใน API_URL
+//   ทุกไซต์อยู่ origin เดียวกัน (wastebanktistr.github.io) → localStorage ใช้ร่วมกัน
+//   ต้องแยกคีย์ ไม่งั้นสำเนา bootstrap/session ของไซต์หนึ่งไปโผล่ที่อีกไซต์
+//   ประกาศไว้ตรงนี้ (ถัดจาก API_URL) เพราะ BOOT_KEY ด้านล่างเรียกใช้ก่อนจุดกลางไฟล์
+function _siteKey_() {
+  try {
+    var m = String(API_URL).match(/\/macros\/s\/([^\/]+)/);
+    return (m ? m[1] : 'default').slice(-12);
+  } catch (e) { return 'default'; }
+}
+
+function apiFetch(action, data, _retry) {
   data = data || {};
   if (typeof APP !== 'undefined' && APP && APP.token && !data._token) data._token = APP.token;
   var body = Object.assign({ action: action }, data);
@@ -852,8 +863,38 @@ function apiFetch(action, data) {
     redirect: 'follow'
   }).then(function (res) { return res.text(); })
     .then(function (text) {
-      try { return JSON.parse(text); }
-      catch (e) { return { success: false, message: 'ตอบกลับไม่ใช่ JSON: ' + text.slice(0, 200) }; }
+      var t = String(text || '').replace(/^\uFEFF/, '').trim();
+      try { return JSON.parse(t); }
+      catch (e) {
+        // [non-JSON guard v2] ได้ HTML = คำขอตายกลางทางที่ชั้น Google ไม่ใช่ error จาก doPost
+        //   อาการที่เจอจริง: /exec รันเสร็จแล้วออก user_content_key มา แต่ดึงผลที่
+        //   script.googleusercontent.com ไม่ทัน → echo 404 (เกิดเป็นระยะ ไม่ใช่ทุกครั้ง)
+        var isHtml = t.charAt(0) === '<';
+        var n = Number(_retry) || 0;
+
+        // สำคัญ: retry ได้เฉพาะ action ที่อ่านอย่างเดียว
+        //   backend ไม่มี idempotency key — ถ้า processDeposit บันทึกสำเร็จแล้วแต่คำตอบหาย
+        //   ระหว่างทาง การยิงซ้ำจะได้รายการซ้อนสองใบ
+        var safe = /^(get|list|search|check|verify|preview|load|fetch|export)/i.test(action) ||
+                   action === 'login' || action === 'operatorTemplateGetFile';
+
+        // login ยิงซ้ำได้ครั้งเดียว: รหัสผิด + echo ล้ม จะถูกนับเป็นความพยายามล้มเหลว
+        //   หลายครั้งต่อการกดปุ่มครั้งเดียว (Utils.recordFailedAttempt) → ล็อก 15 นาทีเร็วเกินจริง
+        var maxRetry = (action === 'login') ? 1 : 2;
+        if (isHtml && safe && n < maxRetry) {
+          var wait = (n === 0) ? 900 : 2200;   // ถอยหลังเพิ่มเวลา เผื่อฝั่งนั้นเขียนผลช้า
+          console.warn('[apiFetch] echo ไม่พร้อม — ลองซ้ำครั้งที่ ' + (n + 1) + '/' + maxRetry, action);
+          return new Promise(function (rs) { setTimeout(rs, wait); })
+                 .then(function () { return apiFetch(action, data, n + 1); });
+        }
+
+        console.error('[apiFetch] non-JSON response', action, 'retry=' + n, t.slice(0, 500));
+        var msg;
+        if (!isHtml)     msg = 'ตอบกลับไม่ใช่ JSON: ' + t.slice(0, 200);
+        else if (safe)   msg = 'เชื่อมข้อมูลไม่สำเร็จ (ลองแล้ว ' + (n + 1) + ' ครั้ง) — กดอีกครั้งเพื่อลองใหม่';
+        else             msg = 'การเชื่อมต่อหลุดกลางคำสั่ง — รายการนี้อาจบันทึกสำเร็จแล้ว กรุณาตรวจสอบก่อนทำซ้ำ อย่ากดบันทึกซ้ำทันที';
+        return { success: false, message: msg };
+      }
     });
 }
 
@@ -921,12 +962,32 @@ function groupWord() {
 }
 function groupExample() {
   var m = (typeof PROFILE !== 'undefined') ? PROFILE.mode : '';
-  if (m === 'school') return 'ชั้น เช่น ป.4 หรือ ป.5;ป.6';
+  if (m === 'school') return 'ป.4 (ทั้งชั้น) หรือ ป.4/1;ป.4/2 (รายห้อง)';
   if (m === 'office') return 'แผนก เช่น ฝ่ายบุคคล หรือ ฝ่ายบุคคล;ฝ่ายบัญชี';
   return 'โซน เช่น หมู่ที่ 1 หรือ หมู่ที่ 1;หมู่ที่ 2';
 }
+var BOOT_KEY = 'wbtistr_boot_' + _siteKey_();
 function bootstrapApp() {
-  apiFetch('getBootstrap', {}).then(applyBootstrap).catch(function (e) { console.error('bootstrap failed', e); });
+  // [PERF v2.5.1] ทาหน้าจอจากสำเนาครั้งก่อนทันที (ชื่อชุมชน/ป้ายกำกับ/ตัวเลือกฟอร์ม ~430 ตัวอักษร)
+  //   เดิมต้องรอ 2 hop ของ Apps Script + cold start ก่อน หน้า login จึงดู "ยังไม่พร้อม"
+  //   ทั้งที่กดใช้ได้แล้ว — และถ้าเน็ต/echo ล้ม หน้าก็ยังใช้งานได้ด้วยสำเนานี้
+  try {
+    var cached = localStorage.getItem(BOOT_KEY);
+    if (cached) {
+      var c = JSON.parse(cached);
+      if (c && c.__site === _siteKey_()) applyBootstrap(c.payload);   // ใช้เฉพาะสำเนาของไซต์นี้
+    }
+  } catch (e) {}
+
+  apiFetch('getBootstrap', {}).then(function (r) {
+    applyBootstrap(r);
+    try {
+      var keep = (r && r.data) ? r.data : r;
+      if (keep && (keep.profile || keep.communityName)) {
+        localStorage.setItem(BOOT_KEY, JSON.stringify({ __site: _siteKey_(), payload: r }));
+      }
+    } catch (e) {}
+  }).catch(function (e) { console.error('bootstrap failed', e); });
 }
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bootstrapApp);
 else bootstrapApp();
@@ -986,6 +1047,30 @@ function callServer(action, data, callback) {
         logout();
         return;
       }
+
+      // [v2.5.5] server สงสัยว่าเป็นรายการซ้ำ → ถามยืนยันก่อนบันทึกเพิ่ม
+      //   เกิดจากเคส: บันทึกสำเร็จแล้วแต่คำตอบหายกลางทาง พนักงานจึงกดใหม่
+      //   จัดการที่นี่จุดเดียว ทุกหน้าที่ใช้ callServer จึงได้รับการป้องกันเหมือนกันหมด
+      if (result && result.duplicateSuspect && !data.confirmDuplicate) {
+        var _d = result.dup || {};
+        uiConfirm({
+          title: '⚠️ อาจเป็นรายการซ้ำ',
+          message: result.message || 'มีรายการเหมือนกันบันทึกไปเมื่อครู่นี้ ต้องการบันทึกเพิ่มอีกใบหรือไม่?',
+          okText: 'บันทึกเพิ่มอีกใบ',
+          cancelText: 'ไม่บันทึก (ตรวจก่อน)',
+          danger: true
+        }).then(function(ok) {
+          if (!ok) {
+            callback({ success: false, cancelled: true,
+                       message: 'ยกเลิกแล้ว ไม่ได้บันทึกซ้ำ — ตรวจประวัติของสมาชิกก่อนทำรายการใหม่' });
+            return;
+          }
+          data.confirmDuplicate = true;
+          callServer(action, data, callback);
+        });
+        return;
+      }
+
       callback(result);
     })
     .withFailureHandler(function(err) { callback({ success: false, message: err.message }); })
@@ -1305,7 +1390,14 @@ function exUpdateSummary() {
   parts.push(scope);
   el.textContent = parts.join(' · ');
 }
+// [v2.2.5] ปุ่มส่งออกอยู่บนหน้า Dashboard ซึ่ง operator โหมดชั่งอย่างเดียวเข้าได้
+//   server ปฏิเสธอยู่แล้ว แต่ปล่อยให้เห็นปุ่มที่กดแล้วขึ้น error เป็น UX ที่แย่ — ซ่อนไปเลย
+function _syncExportBtn() {
+  var b = document.getElementById('exportDataBtn');
+  if (b) b.style.display = _noValue() ? 'none' : '';
+}
 function openExportData() {
+  if (_noValue()) { showToast('ส่งออกไฟล์ต้องมีสิทธิ์ "ดูราคา & มูลค่า"', 'error'); return; }
   var t = new Date();
   var today = t.getFullYear() + '-' + dsPad2(t.getMonth() + 1) + '-' + dsPad2(t.getDate());
   var f = document.getElementById('exFrom'), to = document.getElementById('exTo');
@@ -1516,7 +1608,7 @@ function showPage(pageId) {
 document.addEventListener('DOMContentLoaded', function() {
   if (!restoreSession()) {   // [SESSION PERSIST] ไม่มี session → เตรียมหน้า login
     try {                    // [LOGIN UX] จำ username ล่าสุด เติมให้อัตโนมัติ
-      var lastU = localStorage.getItem('wbtistr_last_user');
+      var lastU = localStorage.getItem(LASTUSER_KEY);
       if (lastU) {
         var uEl = document.getElementById('loginUsername');
         if (uEl) { uEl.value = lastU; var pEl = document.getElementById('loginPassword'); if (pEl) pEl.focus(); }
@@ -1535,12 +1627,21 @@ function enterApp(user, isFreshLogin) {
   document.getElementById('headerUserName').textContent = user.displayName;
   document.getElementById('headerUserRole').textContent = getRoleLabel(user.role);
   buildMenu();
-  if (user.role !== 'member') loadInitialData();
+  if (user.role !== 'member' && !APP._initPrefetched) loadInitialData();   // [PERF v2.5.1]
   if (isFreshLogin && user.forceChangePwd) { showChangePasswordModal(true); }
 }
 
 // [SESSION PERSIST] เก็บ/อ่าน/ล้าง session ใน localStorage
-var SESSION_KEY = 'wbtistr_session';
+// [v2.5.2 FIX] ทุกไซต์ (หนองบัวแดง/บ้านฉาง/NK5/...) ถูกเสิร์ฟจาก origin เดียวกัน
+//   คือ wastebanktistr.github.io → localStorage ถูกใช้ร่วมกันทั้งหมด
+//   ไม่แยกคีย์ = สำเนา bootstrap ของไซต์ A ไปโชว์ชื่อชุมชน/โหมดของไซต์ B
+//   (อันตรายที่สุดคือโหมด: ไซต์ชุมชนอาจโชว์ช่องชั้น/ห้องของโหมดโรงเรียน)
+//   จึงผูกคีย์กับรหัส deployment ใน API_URL
+var SESSION_KEY = 'wbtistr_session_' + _siteKey_();
+var LASTUSER_KEY = 'wbtistr_last_user_' + _siteKey_();
+
+// ล้างคีย์รุ่นเก่าที่ไม่ได้แยกไซต์ทิ้งครั้งเดียว (กันสับสนภายหลัง)
+try { ['wbtistr_session', 'wbtistr_boot', 'wbtistr_last_user'].forEach(function (k) { localStorage.removeItem(k); }); } catch (e) {}
 function saveSession() {
   try { localStorage.setItem(SESSION_KEY, JSON.stringify({ token: APP.token, user: APP.user })); } catch(e) {}
 }
@@ -1576,8 +1677,10 @@ function doLogin(btn) {
         if (result && result.success) {
           APP.user = result.user;
           APP.token = result.token;   // [SEC v1103] เก็บ session token
+          // [PERF v2.5.1] server แนบข้อมูลเริ่มต้นมาให้แล้ว → ไม่ต้องยิง getInitialData อีกรอบ
+          if (result.initialData) applyInitialData(result.initialData);
           saveSession();              // [SESSION PERSIST] เก็บลง localStorage
-          try { localStorage.setItem('wbtistr_last_user', username); } catch(e) {}  // [LOGIN UX] จำ username
+          try { localStorage.setItem(LASTUSER_KEY, username); } catch(e) {}  // [LOGIN UX] จำ username
           enterApp(result.user, true);
         } else {
           showToast((result && result.message) || 'เข้าสู่ระบบไม่สำเร็จ', 'error');
@@ -1659,15 +1762,17 @@ function loadMyAccount() {
         '<div class="card-title">' + esc(b.fullName) + '</div>' +
         '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(b.houseNo) + ' · ' + esc(b.zone || '') + '</div>' +
         '<div style="display:flex;gap:10px;margin-top:12px">' +
+          (b.currentBalance === null ? '' :
           '<div style="flex:1;background:#e8f5e9;border-radius:12px;padding:12px;text-align:center">' +
             '<div style="font-size:12px;color:#2e7d32">ยอดเงินคงเหลือ</div>' +
-            '<div style="font-size:22px;font-weight:700;color:#2e7d32">฿' + (b.currentBalance||0).toLocaleString() + '</div></div>' +
+            '<div style="font-size:22px;font-weight:700;color:#2e7d32">฿' + (b.currentBalance||0).toLocaleString() + '</div></div>') +
           '<div style="flex:1;background:#ede7f6;border-radius:12px;padding:12px;text-align:center">' +
             '<div style="font-size:12px;color:#5e35b1">แต้มสะสม</div>' +
             '<div style="font-size:22px;font-weight:700;color:#5e35b1">' + (b.pointsBalance||0).toLocaleString() + '</div></div>' +
         '</div>' +
-        '<div style="font-size:12px;color:#888;margin-top:10px">ฝากสะสม ฿' + (b.totalDeposit||0).toLocaleString() +
-          ' · ลด CO₂ ' + (b.totalGhg||0).toLocaleString() + ' kg</div>' +
+        '<div style="font-size:12px;color:#888;margin-top:10px">' +
+          (b.totalDeposit === null ? '' : ('ฝากสะสม ฿' + (b.totalDeposit||0).toLocaleString() + ' · ')) +
+          'ลด CO₂ ' + (b.totalGhg||0).toLocaleString() + ' kg</div>' +
       '</div>' +
       '<div class="card-title" style="margin:14px 0 6px">📋 ประวัติล่าสุด</div>' +
       '<div id="myHistoryList"><div class="loading"><div class="spinner"></div></div></div>';
@@ -1689,7 +1794,8 @@ function loadMyHistory() {
         '<div style="display:flex;justify-content:space-between">' +
           '<div><div class="list-title">' + esc(t.type) + ' · ' + esc(t.wasteType) + '</div>' +
           '<div class="list-subtitle">' + esc(t.createdAt) + (t.pointsEarned ? ' · +' + t.pointsEarned + ' แต้ม' : '') + '</div></div>' +
-          '<div style="font-weight:700;color:' + col + '">' + sign + '฿' + (t.amount||0).toLocaleString() + '</div>' +
+          (t.amount === null ? '' :
+            '<div style="font-weight:700;color:' + col + '">' + sign + '฿' + (t.amount||0).toLocaleString() + '</div>') +
         '</div></div>';
     }).join('');
   });
@@ -1915,16 +2021,26 @@ function saveRolePerms(btn) {
 // ═══════════════════════════════════════════════════════════════════════
 // LOAD INITIAL DATA
 // ═══════════════════════════════════════════════════════════════════════
+// [PERF v2.5.1] แยกออกมาเพราะข้อมูลชุดนี้มาได้ 2 ทาง: แนบมากับคำตอบ login หรือยิงถามเอง
+function applyInitialData(d) {
+  d = d || {};
+  if (d.prices) APP.prices = d.prices;
+  if (d.stats)  APP.depositStats = d.stats;   // [DEPOSIT V2] สถิติเรียงการ์ดตามความถี่การใช้งาน
+  if (d.zones)  APP.zones = d.zones;
+  if (d.scopeFilters) APP.scopeFilters = d.scopeFilters;
+
+  // [PERF v2.5.2] server แนบมาเท่าที่ได้ฟรี (ดู _cacheWarm_ ใน .gs)
+  //   ครบ = ข้าม getInitialData ได้เลย · ไม่ครบ = ใช้ของที่ได้มาทาหน้าจอก่อน
+  //   แล้วโหลดส่วนที่ขาดต่อ "หลัง" เข้าแอปแล้ว ผู้ใช้ไม่ต้องรอหน้าขาว
+  APP._initPrefetched = !!(d.prices && d.zones && d.stats && d.scopeFilters);
+  try { injectSearchFilters(); } catch (e) { console.error('injectSearchFilters', e); }
+}
+
 function loadInitialData() {
   // [PERF] รวมเหลือ request เดียว — prices + zones + scopeFilters มาพร้อมกัน
   callServer('getInitialData', {}, function(r) {
     if (!r || !r.success) return;
-    var d = r.data || {};
-    if (d.prices) APP.prices = d.prices;
-    if (d.stats)  APP.depositStats = d.stats;   // [DEPOSIT V2] สถิติเรียงการ์ดตามความถี่การใช้งาน
-    if (d.zones)  APP.zones = d.zones;
-    APP.scopeFilters = d.scopeFilters || { scoped: false };
-    injectSearchFilters();
+    applyInitialData(r.data);
   });
 }
 
@@ -2037,7 +2153,7 @@ function searchMemberFor(context, force) {
         var zoneSeg = (typeof PROFILE !== 'undefined' && PROFILE.mode === 'school') ? '' : (' | ' + esc(m.zone));
         return '<div class="search-result" onclick="selectMemberFor(\'' + context + '\',\'' + esc(m.memberId) + '\')">' +
           '<div class="list-title">' + esc(m.fullName) + cls + no + '</div>' +
-          '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + zoneSeg + ' | ฿' + (m.balance||0).toLocaleString() + ' | ' + (m.points||0).toLocaleString() + ' แต้ม</div></div>';
+          '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + zoneSeg + (m.balance === null ? '' : (' | ฿' + (m.balance||0).toLocaleString())) + ' | ' + (m.points||0).toLocaleString() + ' แต้ม</div></div>';
       }).join('');
       var _bnote = (browse && list.length) ? '<div style="padding:8px 14px;color:#999;font-size:12px;text-align:center">แสดง ' + list.length + ' คนแรก · พิมพ์ชื่อ/รหัสเพื่อค้นหาเพิ่มเติม</div>' : '';
       document.getElementById(context + 'SearchResults').innerHTML = (html + _bnote) || (force ? '' : '<div style="padding:14px;color:#999">ไม่พบ' + PROFILE.subjectWord + '</div>');
@@ -2266,6 +2382,11 @@ function createMember(btn) {
   if (!data.houseNo || !data.firstName || !data.lastName || !data.zone) {
     showToast('กรุณากรอกข้อมูลให้ครบ', 'error'); return;
   }
+  // [prefix-staff] คำนำหน้าบังคับเฉพาะโซนนักเรียน (บุคลากรว่างได้)
+  var _pfxEl = document.getElementById('regPrefix');
+  if (_pfxEl && _pfxEl.dataset.optional !== '1' && !data.prefix) {
+    showToast('กรุณาเลือกคำนำหน้า', 'error'); return;
+  }
   btn.disabled = true;
   callServer('createMember', data, function(r) {
     setTimeout(function() { btn.disabled = false; }, 30000);
@@ -2325,6 +2446,7 @@ function _gradesForZone(zoneName, allGrades) {
   }
   else if (z.indexOf('ปวช') !== -1) pick = ['ปวช'];
   else if (z.indexOf('ปวส') !== -1) pick = ['ปวส'];
+  else if (z.indexOf('ปริญญา') !== -1 || z.indexOf('ป.ตรี') !== -1) pick = ['ปี'];   // [H-1]
   if (!pick) return allGrades.slice();
   return allGrades.filter(function(g) {
     var gs = String(g);
@@ -2342,6 +2464,16 @@ function onRegZoneChange() {
   var filtered = _gradesForZone(zoneSel.value, FO.grades || []);
   _fillSelect('regGrade', filtered, '-- เลือกชั้น --');
   if (prev && filtered.indexOf(prev) !== -1) gradeSel.value = prev;
+
+  // [prefix-staff] โซนที่ไม่มีชั้นให้เลือก = บุคลากร → คำนำหน้าไม่บังคับ (ตั้ง default เป็น "ไม่ระบุ")
+  //   โซนนักเรียน → ถ้ายังไม่ได้เลือกคำนำหน้า เด้งกลับไป "นาย" กันบันทึกโดยไม่มีคำนำหน้า
+  var pfx = document.getElementById('regPrefix');
+  if (pfx) {
+    var isStaff = (filtered.length === 0);
+    pfx.dataset.optional = isStaff ? '1' : '';
+    if (isStaff) { if (pfx.value === undefined) pfx.value = ''; }
+    else if (!pfx.value) pfx.value = 'นาย';
+  }
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -2918,7 +3050,9 @@ function selectWithdrawMember(memberId) {
     APP.currentMember = r.data;
     document.getElementById('withdrawMemberInfo').innerHTML =
       '<div class="balance-name">' + esc(r.data.fullName) + '</div><div class="balance-info">' + memberIdentityLine(r.data) + '</div>' +
-      '<div class="balance-label" style="margin-top:8px">ยอดเงินคงเหลือ</div><div class="balance-amount">฿' + r.data.currentBalance.toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>';
+      // [v2.2.4] null.toLocaleString() จะ throw ทำให้ทั้งหน้าค้าง — ต้องเช็คก่อนเสมอ
+      (r.data.currentBalance === null ? '' :
+        '<div class="balance-label" style="margin-top:8px">ยอดเงินคงเหลือ</div><div class="balance-amount">฿' + r.data.currentBalance.toLocaleString(undefined,{minimumFractionDigits:2}) + '</div>');
     document.getElementById('withdrawForm').classList.remove('hidden');
   });
 }
@@ -3415,6 +3549,7 @@ function addBuyer(btn) {
 // DASHBOARD
 // ═══════════════════════════════════════════════════════════════════════
 function loadDashboard() {
+  _syncExportBtn();   // [v2.2.5]
   callServer('getFullDashboard', {}, function(r) {
     if (!r.success) { document.getElementById('dashboardContent').innerHTML = '<div style="color:var(--danger);padding:20px">'+esc(r.message)+'</div>'; return; }
     var d = r.data.summary;
@@ -3474,19 +3609,23 @@ function loadDashboard() {
     h += '</div>';
     }   // [v2.2.0] ปิด if (!_noVal)
 
-    h += '<div class="card"><div class="card-title">สต็อกวัสดุ</div>';
-    var maxW = 1;
-    cats.forEach(function(c) { if (c.totalWeight > maxW) maxW = c.totalWeight; });
-    cats.forEach(function(c, i) {
-      var pct = Math.round(c.totalWeight / maxW * 100);
-      h += '<div class="dash-bar"><span style="min-width:65px;color:var(--text-light)">' + esc(c.category).substring(0,8) + '</span>';
-      h += '<div class="dash-bar-bg"><div class="dash-bar-fill" style="width:'+pct+'%;background:'+catColors[i%catColors.length]+'"></div></div>';
-      h += '<span style="min-width:55px;text-align:right;font-weight:600">' + c.totalWeight.toLocaleString() + ' กก.</span></div>';
-    });
-    // [v2.2.0] ตัดครึ่งหลัง "/ มูลค่า ฿..." เมื่อถูก mask
-    h += '<div style="margin-top:6px;font-size:11px;color:var(--text-light)">รวม ' + (d.totalStock||0).toLocaleString() + ' กก.' +
-         (d.totalStockValue === null ? '' : (' / มูลค่า ฿' + (d.totalStockValue||0).toLocaleString())) + '</div>';
-    h += '</div>';
+    // [L-1] สต็อกวัสดุ = คลังรวมทั้งระบบ ไม่เกี่ยวกับชั้น/ห้องที่ครูดูแล → ผู้ใช้ที่มี scope ได้ [] มา
+    //   เดิมยังวาดการ์ดหัวข้อ+"รวม 0 กก." เป็นกล่องเปล่าชวนงง — ซ่อนทั้งการ์ดเมื่อไม่มีข้อมูล
+    if (cats.length) {
+      h += '<div class="card"><div class="card-title">สต็อกวัสดุ</div>';
+      var maxW = 1;
+      cats.forEach(function(c) { if (c.totalWeight > maxW) maxW = c.totalWeight; });
+      cats.forEach(function(c, i) {
+        var pct = Math.round(c.totalWeight / maxW * 100);
+        h += '<div class="dash-bar"><span style="min-width:65px;color:var(--text-light)">' + esc(c.category).substring(0,8) + '</span>';
+        h += '<div class="dash-bar-bg"><div class="dash-bar-fill" style="width:'+pct+'%;background:'+catColors[i%catColors.length]+'"></div></div>';
+        h += '<span style="min-width:55px;text-align:right;font-weight:600">' + c.totalWeight.toLocaleString() + ' กก.</span></div>';
+      });
+      // [v2.2.0] ตัดครึ่งหลัง "/ มูลค่า ฿..." เมื่อถูก mask
+      h += '<div style="margin-top:6px;font-size:11px;color:var(--text-light)">รวม ' + (d.totalStock||0).toLocaleString() + ' กก.' +
+           (d.totalStockValue === null ? '' : (' / มูลค่า ฿' + (d.totalStockValue||0).toLocaleString())) + '</div>';
+      h += '</div>';
+    }
 
     h += '<div class="card"><div class="card-title">แต้มและของรางวัล</div>';
     h += '<div class="stats-grid" style="margin-bottom:10px">';
@@ -3548,7 +3687,8 @@ function loadDashboard() {
         var tIcon = t.type==='ฝาก' ? 'positive' : 'negative';
         var tSign = t.type==='ฝาก' ? '+' : '-';
         h += '<div class="list-item"><div class="list-content"><div class="list-title">' + esc(t.fullName) + '</div><div class="list-subtitle">' + esc(t.date) + '</div></div>';
-        h += '<div class="list-value ' + tIcon + '">' + tSign + '฿' + (t.amount||0).toLocaleString() + '</div></div>';
+        h += (t.amount === null ? '' :
+          '<div class="list-value ' + tIcon + '">' + tSign + '฿' + (t.amount||0).toLocaleString() + '</div>') + '</div>';
       });
     } else { h += '<div style="padding:16px;text-align:center;color:var(--text-light)">ยังไม่มีธุรกรรม</div>'; }
     h += '</div></div>';
@@ -3598,13 +3738,16 @@ function loadBalanceReport() {
     var d = r.data;
     var html = '<div class="stats-grid" style="margin-bottom:16px">' +
       '<div class="stat-card"><div class="stat-value">' + d.count + '</div><div class="stat-label">' + PROFILE.subjectWord + 'ที่มียอด</div></div>' +
-      '<div class="stat-card"><div class="stat-value">฿' + (d.totalBalance||0).toLocaleString() + '</div><div class="stat-label">ยอดเงินรวม</div></div>' +
+      (d.totalBalance === null ? '' :
+        '<div class="stat-card"><div class="stat-value">฿' + (d.totalBalance||0).toLocaleString() + '</div><div class="stat-label">ยอดเงินรวม</div></div>') +
       '<div class="stat-card"><div class="stat-value purple">' + (d.totalPoints||0).toLocaleString() + '</div><div class="stat-label">แต้มรวม</div></div>' +
-      '<div class="stat-card"><div class="stat-value">฿' + (d.avgBalance||0).toLocaleString() + '</div><div class="stat-label">เฉลี่ย/คน</div></div></div>';
+      (d.avgBalance === null ? '' :
+        '<div class="stat-card"><div class="stat-value">฿' + (d.avgBalance||0).toLocaleString() + '</div><div class="stat-label">เฉลี่ย/คน</div></div>') + '</div>';
     d.members.forEach(function(m) {
       html += '<div class="list-item"><div class="list-content"><div class="list-title">' + esc(m.fullName) + '</div>' +
         '<div class="list-subtitle">' + PROFILE.idLabel + ' ' + esc(m.houseNo) + ' | ' + esc(m.zone) + '</div></div>' +
-        '<div style="text-align:right"><div class="list-value positive">฿' + m.currentBalance.toLocaleString() + '</div>' +
+        '<div style="text-align:right">' + (m.currentBalance === null ? '' :
+          '<div class="list-value positive">฿' + m.currentBalance.toLocaleString() + '</div>') +
         '<div style="font-size:11px;color:var(--points)">' + m.pointsBalance.toLocaleString() + ' แต้ม</div></div></div>';
     });
     document.getElementById('balanceReportContent').innerHTML = html;
@@ -3788,15 +3931,23 @@ function loadUsers() {
           '<button class="btn btn-outline" onclick="resetUserPwd(\'' + uid + '\',this)">🔑 รีเซ็ตรหัสผ่าน</button>' +
           '<div style="height:8px"></div>' +
           '<button class="btn btn-outline" onclick="inviteUser(\'' + uid + '\')">📋 คัดลอกข้อความเชิญ</button>';
-        if (APP._scopeGroups && (u.role === 'operator' || u.role === 'viewer')) {
+        if (APP._scopeCatalog && (u.role === 'operator' || u.role === 'viewer')) {
           var _cur = {}; String(u.scope || '').split(';').forEach(function(s) { s = s.trim(); if (s) _cur[s] = true; });
-          var _boxes = APP._scopeGroups.map(function(g) {
-            return '<label style="display:flex;align-items:center;gap:4px;font-size:13px"><input type="checkbox" class="uscope_' + uid + '" value="' + esc(g) + '"' + (_cur[g] ? ' checked' : '') + '>' + esc(g) + '</label>';
+          var _all = !Object.keys(_cur).length;   // [C-2] ว่าง = ทุกกลุ่ม — ต้องเป็นตัวเลือกที่เห็นชัด ไม่ใช่ผลข้างเคียงของการไม่ติ๊ก
+          var _sec = APP._scopeCatalog.sections.filter(function(sc) { return sc.items.length; }).map(function(sc) {
+            return '<div style="margin-top:8px"><div style="font-size:12px;color:#888;margin-bottom:4px">' + esc(sc.label) + '</div>' +
+              '<div style="display:flex;flex-wrap:wrap;gap:8px">' + sc.items.map(function(it) {
+                return '<label style="display:flex;align-items:center;gap:4px;font-size:13px;' + (it.exists ? '' : 'opacity:.6') + '">' +
+                  '<input type="checkbox" class="uscope_' + uid + '" value="' + esc(it.token) + '"' + (_cur[it.token] ? ' checked' : '') + '>' +
+                  esc(it.label) + '</label>';
+              }).join('') + '</div></div>';
           }).join('');
           panel += '<div style="height:10px"></div>' +
             '<div class="form-group"><label class="form-label">🎯 กลุ่มที่ดูแล (' + (PROFILE.groupLabel || 'กลุ่ม') + ')</label>' +
-            '<div style="display:flex;flex-wrap:wrap;gap:8px">' + _boxes + '</div>' +
-            '<div style="color:#888;font-size:12px;margin-top:4px">ไม่ติ๊ก = ดูแลทุก' + groupWord() + '</div></div>' +
+            '<label style="display:flex;align-items:center;gap:6px;font-weight:700;color:#b45309">' +
+              '<input type="checkbox" id="uscopeall_' + uid + '"' + (_all ? ' checked' : '') +
+              ' onchange="onScopeAllToggle(\'' + uid + '\')"> ดูแลทุก' + groupWord() + ' (เห็นข้อมูลทั้งหมด)</label>' +
+            '<div id="uscopebox_' + uid + '"' + (_all ? ' style="opacity:.4;pointer-events:none"' : '') + '>' + _sec + '</div></div>' +
             '<button class="btn btn-primary" onclick="saveUserScope(\'' + uid + '\',this)">💾 บันทึกกลุ่ม</button>';
         }
       }
@@ -3822,12 +3973,25 @@ function loadScopeGroups(cb) {
     cb();
   });
 }
+function onScopeAllToggle(uid) {
+  var on = document.getElementById('uscopeall_' + uid).checked;
+  var box = document.getElementById('uscopebox_' + uid);
+  if (!box) return;
+  box.style.opacity = on ? '.4' : '';
+  box.style.pointerEvents = on ? 'none' : '';
+}
 function saveUserScope(username, btn) {
-  var chks = document.querySelectorAll('.uscope_' + username);
+  var allEl = document.getElementById('uscopeall_' + username);
+  var all = !!(allEl && allEl.checked);
   var arr = [];
-  for (var i = 0; i < chks.length; i++) if (chks[i].checked) arr.push(chks[i].value);
+  if (!all) {
+    var chks = document.querySelectorAll('.uscope_' + username);
+    for (var i = 0; i < chks.length; i++) if (chks[i].checked) arr.push(chks[i].value);
+    // [C-2] "ไม่ติ๊กอะไรเลย" ไม่ใช่ "ทุกกลุ่ม" อีกต่อไป — ต้องเลือกให้ชัด
+    if (!arr.length) { showToast('เลือกอย่างน้อย 1 กลุ่ม หรือติ๊ก "ดูแลทุก' + groupWord() + '"', 'error'); return; }
+  }
   btn.disabled = true;
-  callServer('updateUser', { targetUsername: username, scope: arr }, function(r) {
+  callServer('updateUser', { targetUsername: username, scope: arr, allowAllScope: all }, function(r) {
     btn.disabled = false;
     if (r.success) { showToast('บันทึกกลุ่มที่ดูแลแล้ว (ผู้ใช้ต้องเข้าระบบใหม่)', 'success'); loadUsers(); }
     else showToast(r.message, 'error');
@@ -4173,7 +4337,7 @@ async function resolveVoidReq(reqId, approve) {
 
 function loadAuditLogs() {
   callServer('getAuditLogs', { limit: 100 }, function(r) {
-    if (!r.success) { document.getElementById('auditLogList').innerHTML = '<div style="color:var(--danger);padding:16px">' + esc(r.message) + '</div>'; return; }
+    if (!r || !r.success) { document.getElementById('auditLogList').innerHTML = '<div style="color:var(--danger);padding:16px">' + esc((r && r.message) || 'โหลด Audit Logs ไม่สำเร็จ') + '</div>'; return; }
     _auditData = r.data || [];
     renderAuditLogs(_auditData);
   });
